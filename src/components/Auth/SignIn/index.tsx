@@ -10,8 +10,8 @@ import Logo from "@/components/Layout/Header/BrandLogo/Logo";
 
 const Signin = ({ signInOpen }: { signInOpen?: any }) => {
   const { data: session } = useSession();
-  const [username, setUsername] = useState("he186939nguyenlongnhat@gmail.com");
-  const [password, setPassword] = useState("Nhat123");
+  const [username, setUsername] = useState("nhatlckbt007@gmail.com");
+  const [password, setPassword] = useState("Nhat12345");
   const authDialog = useContext(AuthDialogContext);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -21,11 +21,14 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3001/user/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: username, password }),
-      });
+      const res = await fetch(
+        "https://cinema-booking-1.onrender.com/user/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: username, password }),
+        }
+      );
 
       const data = await res.json();
       const token = data.user?.token;
