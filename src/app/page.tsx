@@ -6,6 +6,7 @@ import Testimonial from "@/components/Home/Testimonial";
 import BlogSmall from "@/components/shared/Blog";
 import GetInTouch from "@/components/Home/GetInTouch";
 import FAQ from "@/components/Home/FAQs";
+import SchedulePage from "@/components/Properties/Schedule";
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
       <Hero />
       <Services />
       <Properties />
+      <SchedulePage />
       <FeaturedProperty />
       <Testimonial />
       <BlogSmall />

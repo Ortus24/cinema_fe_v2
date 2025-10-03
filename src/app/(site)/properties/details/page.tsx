@@ -17,7 +17,7 @@ const page = () => {
         description="Experience elegance and comfort with our exclusive luxury  villas, designed for sophisticated living."
         badge="Properties"
       />
-      <CinemaListing />
+      <MovieBooking />
     </>
   );
 };

@@ -21,11 +21,14 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
     setLoading(true);
 
     try {
-      const res = await fetch("https://cinema-booking-1.onrender.com/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: username, password }),
-      });
+      const res = await fetch(
+        "https://cinema-booking-l32q.onrender.com/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: username, password }),
+        }
+      );
 
       const data = await res.json();
       const token = data.user?.token;
@@ -33,12 +36,13 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
       if (token) {
         // console.log("Token:", token);
         localStorage.setItem("token", token);
-        toast.loading(token);
-        // toast.success("Đăng nhập thành công");
-        router.push("/");
+        // toast.loading(token);
+        toast.success("Đăng nhập thành công");
+
         setTimeout(() => {
-          window.location.reload();
-        }, 100);
+          // window.location.reload();
+          router.push("/");
+        }, 10);
       } else {
         toast.error(data.message || "Đăng nhập thất bại");
       }
