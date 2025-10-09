@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 
 type Seat = {
   seat_number: string;
   seat_type: "VIP" | "THUONG";
   is_booked: boolean;
+  price: number;
 };
 
 interface SeatSelectionModalProps {
@@ -20,6 +21,16 @@ export default function SeatSelectionModal({
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const totalPrice = useMemo(() => {
+    return seats
+      .filter((seat) => selectedSeats.includes(seat.seat_number))
+      .reduce((sum, seat) => {
+        // chuyển price sang number an toàn
+        const p = Number(String(seat.price).replace(/[^0-9.-]+/g, ""));
+        return sum + (isNaN(p) ? 0 : p);
+      }, 0);
+  }, [selectedSeats, seats]);
 
   useEffect(() => {
     if (!showtimeId) return;
@@ -188,7 +199,14 @@ export default function SeatSelectionModal({
                     {selectedSeats.join(", ") || "Chưa chọn"}
                   </span>
                 </p>
+                <p className="text-sm mt-1">
+                  Tổng tiền:{" "}
+                  <span className="font-semibold text-pink-600">
+                    {totalPrice.toLocaleString("vi-VN")} đ
+                  </span>
+                </p>
               </div>
+
               <button
                 disabled={selectedSeats.length === 0}
                 className={`px-6 py-3 rounded-full font-semibold ${
