@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import SeatSelectionModal from "../Seat";
 
 /* =======================
  🎥 TypeScript Types
@@ -59,6 +60,10 @@ export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState<number>(0);
   const [selectedShowtime, setSelectedShowtime] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(
+    null
+  );
 
   /* =======================
    🗓️ Tạo danh sách ngày
@@ -179,6 +184,7 @@ export default function SchedulePage() {
       }
 
       acc[title].showtimes.push({
+        showtime_id: item.showtime_id,
         roomName: item.room.name,
         timeStart: startTime,
         timeEnd: endTime,
@@ -253,7 +259,7 @@ export default function SchedulePage() {
         </div>
 
         {/* Danh sách phim */}
-        <div className="bg-gradient-to-br from-pink-50 to-white shadow-inner rounded-xl border border-pink-100 p-4 mb-6 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50">
+        <div className="bg-gradient-to-br from-pink-50 to-white shadow-inner rounded-xl border border-pink-100 p-4 mb-6 max-h-[800px] overflow-y-auto scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50">
           {moviesByTitle.length === 0 ? (
             <div className="flex flex-col items-center justify-center mt-10 text-center animate-fadeIn">
               <img
@@ -317,8 +323,9 @@ export default function SchedulePage() {
                                   <button
                                     key={idx}
                                     onClick={() =>
-                                      setSelectedShowtime(show.timeStart)
+                                      setSelectedShowtimeId(show.showtime_id)
                                     }
+                                    // 🟢 dùng id suất chiếu
                                     className="px-4 py-1 border border-blue-400 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition"
                                   >
                                     {show.timeStart} ~ {show.timeEnd}
@@ -337,6 +344,13 @@ export default function SchedulePage() {
           )}
         </div>
       </div>
+      {/* Modal chọn ghế */}
+      {selectedShowtimeId && (
+        <SeatSelectionModal
+          showtimeId={selectedShowtimeId}
+          onClose={() => setSelectedShowtimeId(null)}
+        />
+      )}
     </div>
   );
 }
