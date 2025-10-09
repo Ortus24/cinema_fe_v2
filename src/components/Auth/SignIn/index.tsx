@@ -39,10 +39,11 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
         // toast.loading(token);
         toast.success("Đăng nhập thành công");
 
+        router.push("/");
         setTimeout(() => {
-          // window.location.reload();
-          router.push("/");
-        }, 10);
+          window.location.reload();
+          // router.push("/");
+        }, 500);
       } else {
         toast.error(data.message || "Đăng nhập thất bại");
       }

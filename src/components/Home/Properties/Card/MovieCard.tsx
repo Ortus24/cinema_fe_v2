@@ -48,11 +48,11 @@ const MovieCard: React.FC<{ movie: Movie }> = ({ movie }) => {
       </div>
 
       {/* Nội dung */}
-      <div className="p-5 flex flex-col gap-3">
-        <h3 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition">
+      <div className="p-5 flex flex-col gap-3 w-[480px]">
+        <h3 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition truncate">
           {title}
         </h3>
-        <p className="text-sm text-black/60 dark:text-white/60 line-clamp-2">
+        <p className="text-sm text-black/60 dark:text-white/60 truncate">
           {description}
         </p>
 

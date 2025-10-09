@@ -55,14 +55,15 @@ const ResidentialList: React.FC = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       {/* Video + Poster */}
       <div className="relative w-full h-[500px] rounded-xl overflow-hidden shadow-md">
-        <iframe
+        <video
           className="absolute inset-0 w-full h-full object-cover z-0"
-          src="https://www.youtube.com/embed/LQYpLcz53pQ?autoplay=1&mute=1&loop=1&playlist=LQYpLcz53pQ&vq=hd1080"
+          src="https://cinema-minio.onrender.com/cinema-bucket/movie/conan/541eae8d-85db-4a10-8656-9625f5f53cb8-conantrailer.mp4"
           title="Trailer phim"
-          frameBorder="0"
-          allow="autoplay; fullscreen"
-          allowFullScreen
-        ></iframe>
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
         <div className="absolute inset-0 bg-black/10 z-10"></div>
         <div className="absolute bottom-4 left-4 w-40 h-56 rounded-lg overflow-hidden shadow-lg z-20 border-2 border-white">
           <img

@@ -15,11 +15,11 @@ export default function Home() {
       <Services />
       <Properties />
       <SchedulePage />
-      <FeaturedProperty />
+      {/* <FeaturedProperty />
       <Testimonial />
       <BlogSmall />
-      <GetInTouch />
-      <FAQ />
+      <GetInTouch /> */}
+      {/* <FAQ /> */}
     </main>
   );
 }

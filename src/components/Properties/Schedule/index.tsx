@@ -1,297 +1,331 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { X } from "lucide-react";
 
+/* =======================
+ 🎥 TypeScript Types
+======================= */
+type Movie = {
+  title: string;
+  duration: number;
+  genre: string;
+  language: string;
+  release_date: string;
+  description: string;
+  image_url: string;
+};
+
+type Cinema = {
+  cinema_id: number;
+  name: string;
+  address: string;
+  phone: string;
+};
+
+type Room = {
+  room_id: number;
+  name: string;
+  capacity: number;
+  cinema: Cinema;
+};
+
+type Showtime = {
+  showtime_id: number;
+  start_time: string;
+  price: string;
+  movie: Movie;
+  room: Room;
+};
+
+type DateItem = {
+  id: number;
+  date: number;
+  month: number;
+  dayOfWeek: string;
+  label: string;
+  fullDate: string;
+};
+
+/* =======================
+ ⚙️ Component chính
+======================= */
 export default function SchedulePage() {
-  const [selectedCity, setSelectedCity] = useState("Hồ Chí Minh");
-  const [selectedTheater, setSelectedTheater] = useState(
-    "CGV Vincom Mega Mall Grand Park"
-  );
-  const [selectedDay, setSelectedDay] = useState(3);
+  const [showtimeData, setShowtimeData] = useState<Showtime[]>([]);
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [filteredTheaters, setFilteredTheaters] = useState<Cinema[]>([]);
+  const [selectedTheater, setSelectedTheater] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState<number>(0);
+  const [selectedShowtime, setSelectedShowtime] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // ✅ Loại bỏ rạp trùng lặp
-  const theaters = [
-    "CGV Vincom Mega Mall Grand Park",
-    "CGV Giga Mall Thủ Đức",
-    "CGV Aeon Bình Tân",
-    "CGV Pearl Plaza",
-    "CGV Saigonres Nguyễn Xí",
-    "CGV Hoàng Văn Thụ",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-    "CGV Liberty Citypoint",
-  ];
-
-  const uniqueTheaters = [...new Set(theaters)];
-
-  const days = [
-    { id: 3, label: "Th 3, 14 Thg 11" },
-    { id: 4, label: "Th 4, 15 Thg 11" },
-    { id: 5, label: "Th 5, 16 Thg 11" },
-    { id: 6, label: "Th 6, 17 Thg 11" },
-    { id: 7, label: "Th 7, 18 Thg 11" },
-    { id: 8, label: "CN, 19 Thg 11" },
-  ];
-
-  const scheduleData = {
-    "CGV Vincom Mega Mall Grand Park": {
-      3: [
-        {
-          title: "Tử Chiến Trên Không",
-          genre: "Hình Sự, Hành Động, Gay Cấn",
-          rating: "16+",
-          image: "/tuchientrenkhong.jpg",
-          times: ["09:50", "13:00", "17:40", "20:00"],
-        },
-        {
-          title: "Chainsaw Man - The Movie: Chương Reze",
-          genre: "Hoạt Hình, Hành Động, Giả Tưởng",
-          rating: "18+",
-          image: "/chainsawman.jpg",
-          times: ["10:00", "13:20", "16:30", "19:50"],
-        },
-      ],
-    },
-    "CGV Liberty Citypoint": {
-      "CGV Vincom Mega Mall Grand Park": {
-        3: [
-          {
-            title: "Tử Chiến Trên Không",
-            genre: "Hình Sự, Hành Động, Gay Cấn",
-            rating: "16+",
-            image: "/tuchientrenkhong.jpg",
-            times: ["09:50", "13:00", "17:40", "20:00"],
-          },
-          {
-            title: "Chainsaw Man - The Movie: Chương Reze",
-            genre: "Hoạt Hình, Hành Động, Giả Tưởng",
-            rating: "18+",
-            image: "/chainsawman.jpg",
-            times: ["10:00", "13:20", "16:30", "19:50"],
-          },
-        ],
-        4: [
-          {
-            title: "Venom: Kẻ Báo Thù Cuối Cùng",
-            genre: "Hành Động, Viễn Tưởng",
-            rating: "13+",
-            image: "/venom.jpg",
-            times: ["10:30", "14:10", "18:30", "21:40"],
-          },
-        ],
-      },
-
-      "CGV Giga Mall Thủ Đức": {
-        3: [
-          {
-            title: "Thanh Gươm Diệt Quỷ",
-            genre: "Hoạt Hình, Phiêu Lưu",
-            rating: "13+",
-            image: "/kimetsu.jpg",
-            times: ["09:00", "12:30", "16:10", "19:45"],
-          },
-        ],
-        4: [
-          {
-            title: "Godzilla x Kong",
-            genre: "Hành Động, Kỳ Ảo",
-            rating: "16+",
-            image: "/godzilla.jpg",
-            times: ["11:00", "14:30", "18:00", "21:30"],
-          },
-        ],
-      },
-
-      "CGV Aeon Bình Tân": {
-        3: [
-          {
-            title: "Inside Out 2",
-            genre: "Hoạt Hình, Gia Đình",
-            rating: "P",
-            image: "/insideout2.jpg",
-            times: ["09:15", "11:30", "14:00", "16:20", "18:40", "21:00"],
-          },
-          {
-            title: "Deadpool & Wolverine",
-            genre: "Hành Động, Hài",
-            rating: "18+",
-            image: "/deadpool.jpg",
-            times: ["10:00", "13:00", "16:00", "19:00", "22:00"],
-          },
-        ],
-      },
-
-      "CGV Pearl Plaza": {
-        3: [
-          {
-            title: "Avatar: Dòng Chảy Của Nước",
-            genre: "Hành Động, Viễn Tưởng",
-            rating: "13+",
-            image: "/avatar2.jpg",
-            times: ["09:00", "13:30", "18:00", "21:30"],
-          },
-        ],
-      },
-
-      "CGV Saigonres Nguyễn Xí": {
-        3: [
-          {
-            title: "Oppenheimer",
-            genre: "Tiểu Sử, Chính Kịch",
-            rating: "16+",
-            image: "/oppenheimer.jpg",
-            times: ["08:30", "12:00", "15:30", "19:00", "22:30"],
-          },
-        ],
-      },
-
-      "CGV Hoàng Văn Thụ": {
-        3: [
-          {
-            title: "Barbie",
-            genre: "Hài, Phiêu Lưu",
-            rating: "13+",
-            image: "/barbie.jpg",
-            times: ["09:20", "11:40", "14:10", "16:30", "19:00", "21:20"],
-          },
-        ],
-      },
-
-      "CGV Liberty Citypoint": {
-        3: [
-          {
-            title: "Spider-Man: Across the Spider-Verse",
-            genre: "Hoạt Hình, Hành Động",
-            rating: "13+",
-            image: "/spiderman.jpg",
-            times: ["10:00", "13:00", "16:00", "19:00", "22:00"],
-          },
-        ],
-      },
-    },
-    // ... các rạp khác giữ nguyên như cũ
+  /* =======================
+   🗓️ Tạo danh sách ngày
+  ======================= */
+  const generateDates = (): DateItem[] => {
+    const daysOfWeek = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+    const today = new Date();
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      return {
+        id: i,
+        date: date.getDate(),
+        month: date.getMonth() + 1,
+        dayOfWeek: daysOfWeek[date.getDay()],
+        label:
+          i === 0
+            ? "Hôm nay"
+            : `${daysOfWeek[date.getDay()]} ${date.getDate()}/${
+                date.getMonth() + 1
+              }`,
+        fullDate: date.toISOString().split("T")[0],
+      };
+    });
   };
 
-  const movies = scheduleData[selectedTheater]?.[selectedDay] || [];
+  const dates = generateDates();
 
+  /* =======================
+   📡 Lấy dữ liệu từ API
+  ======================= */
+  useEffect(() => {
+    // 🏢 Lấy toàn bộ cinema
+    const fetchCinemas = async () => {
+      try {
+        const res = await fetch(
+          "https://cinema-booking-l32q.onrender.com/cinema"
+        );
+        const data: Cinema[] = await res.json();
+        setCinemas(data);
+        setFilteredTheaters(data);
+
+        // chọn rạp đầu tiên mặc định
+        if (data.length > 0) setSelectedTheater(data[0].cinema_id);
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách rạp:", err);
+      }
+    };
+
+    // 🎞️ Lấy toàn bộ showtime
+    const fetchShowtimes = async () => {
+      try {
+        const res = await fetch(
+          "https://cinema-booking-l32q.onrender.com/showtimes"
+        );
+        const data: Showtime[] = await res.json();
+        setShowtimeData(data);
+      } catch (err) {
+        console.error("Lỗi khi lấy lịch chiếu:", err);
+      }
+    };
+
+    fetchCinemas();
+    fetchShowtimes();
+  }, []);
+
+  /* =======================
+   🔍 Lọc rạp theo từ khóa
+  ======================= */
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredTheaters(cinemas);
+    } else {
+      setFilteredTheaters(
+        cinemas.filter((t) =>
+          t.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+  }, [searchQuery, cinemas]);
+
+  /* =======================
+ 🎦 Lọc phim theo rạp & ngày
+======================= */
+  const filteredShowtimes = showtimeData.filter((item) => {
+    const matchTheater =
+      !selectedTheater || item.room.cinema.cinema_id === selectedTheater;
+
+    const matchDate =
+      selectedDate !== null &&
+      selectedDate !== undefined &&
+      item.start_time.startsWith(dates[selectedDate].fullDate);
+
+    return matchTheater && matchDate;
+  });
+
+  // ✅ Gom các phim và giờ chiếu theo phòng
+  const moviesByTitle = Object.values(
+    filteredShowtimes.reduce((acc: any, item) => {
+      const title = item.movie.title;
+      const start = new Date(item.start_time);
+      const end = new Date(start.getTime() + item.movie.duration * 60000);
+
+      const startTime = start.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const endTime = end.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      if (!acc[title]) {
+        acc[title] = {
+          ...item.movie,
+          showtimes: [],
+        };
+      }
+
+      acc[title].showtimes.push({
+        roomName: item.room.name,
+        timeStart: startTime,
+        timeEnd: endTime,
+      });
+
+      return acc;
+    }, {})
+  );
+
+  /* =======================
+   🎨 Giao diện
+  ======================= */
   return (
-    <div className="flex flex-col items-center w-full p-6">
-      <h1 className="text-3xl font-bold text-pink-600 mb-6">Lịch chiếu phim</h1>
+    <div className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 min-h-screen">
+      {/* Sidebar RẠP */}
+      <div className="md:w-1/4 bg-white rounded-2xl shadow-md p-4 h-fit sticky top-6">
+        <h2 className="text-lg font-semibold text-pink-600 mb-3 text-center">
+          🎦 Danh sách rạp
+        </h2>
 
-      {/* Bộ lọc vị trí */}
-      <div className="flex gap-4 items-center mb-6">
-        <select
-          className="border rounded-lg p-2"
-          value={selectedCity}
-          onChange={(e) => setSelectedCity(e.target.value)}
-        >
-          <option>Hồ Chí Minh</option>
-          <option>Hà Nội</option>
-          <option>Đà Nẵng</option>
-        </select>
-        <Button variant="outline">Gần bạn</Button>
-      </div>
+        <input
+          type="text"
+          placeholder="🔍 Tìm rạp chiếu..."
+          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-pink-400 outline-none mb-4"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
 
-      {/* Layout chia cột */}
-      <div className="grid grid-cols-12 gap-6 w-full max-w-6xl">
-        {/* Cột trái */}
-        <div className="col-span-3 bg-white border rounded-lg p-4 overflow-y-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-          {uniqueTheaters.map((t, index) => (
+        {/* Danh sách rạp có thể cuộn */}
+        <div className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-pink-400 scrollbar-track-gray-100">
+          {filteredTheaters.map((theater) => (
             <div
-              key={`${t}-${index}`}
-              onClick={() => setSelectedTheater(t)}
-              className={`cursor-pointer p-2 rounded-md mb-2 border-l-4 ${
-                selectedTheater === t
-                  ? "bg-pink-50 border-pink-500 font-semibold text-pink-600"
-                  : "border-transparent hover:bg-gray-100"
+              key={theater.cinema_id}
+              onClick={() => setSelectedTheater(theater.cinema_id)}
+              className={`cursor-pointer p-3 rounded-lg border-l-4 transition-all ${
+                selectedTheater === theater.cinema_id
+                  ? "bg-pink-50 border-pink-500 font-semibold text-pink-700"
+                  : "border-transparent hover:bg-gray-50"
               }`}
             >
-              {t}
+              <div className="flex flex-col">
+                <span className="font-medium">{theater.name}</span>
+                <span className="text-xs text-gray-500">{theater.address}</span>
+              </div>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Cột phải */}
-        <div className="col-span-9">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="font-semibold text-lg">{selectedTheater}</h2>
-                  <p className="text-sm text-gray-500">
-                    Lô L5-01, Tầng 5, Trung Tâm Thương Mại Vincom Mega Mall
-                    Grand Park
-                  </p>
-                </div>
-              </div>
+      {/* Lịch chiếu */}
+      <div className="flex-1 max-w-5xl">
+        <h1 className="text-2xl font-bold text-pink-600 mb-4 text-center">
+          📅 Lịch chiếu phim
+        </h1>
 
-              {/* Ngày */}
-              <div className="flex gap-2 mb-4">
-                {days.map((d) => (
-                  <button
-                    key={d.id}
-                    onClick={() => setSelectedDay(d.id)}
-                    className={`rounded-md px-3 py-1 border text-sm ${
-                      d.id === selectedDay
-                        ? "bg-pink-600 text-white"
-                        : "border-gray-300 text-gray-700 hover:bg-gray-100"
-                    }`}
+        {/* Chọn ngày */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-thin justify-center mb-5">
+          {dates.map((d) => (
+            <Button
+              key={d.id}
+              onClick={() => setSelectedDate(d.id)}
+              variant={selectedDate === d.id ? "default" : "outline"}
+              className={`px-4 py-2 rounded-lg ${
+                selectedDate === d.id
+                  ? "bg-pink-500 text-white shadow-md"
+                  : "hover:bg-pink-50"
+              }`}
+            >
+              {d.label}
+            </Button>
+          ))}
+        </div>
+
+        {/* Danh sách phim */}
+        <div className="bg-gradient-to-br from-pink-50 to-white shadow-inner rounded-xl border border-pink-100 p-4 mb-6 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50">
+          {moviesByTitle.length === 0 ? (
+            <p className="text-center text-gray-500 mt-8">
+              Không có suất chiếu nào cho ngày này.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-8">
+              {moviesByTitle.map((movie: any) => {
+                const showtimesByRoom = movie.showtimes.reduce(
+                  (acc: any, show: any) => {
+                    if (!acc[show.roomName]) acc[show.roomName] = [];
+                    acc[show.roomName].push(show);
+                    return acc;
+                  },
+                  {}
+                );
+
+                return (
+                  <div
+                    key={movie.title}
+                    className="flex flex-col sm:flex-row bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden p-4"
                   >
-                    {d.label}
-                  </button>
-                ))}
-              </div>
+                    <img
+                      src={movie.image_url}
+                      alt={movie.title}
+                      className="w-full sm:w-56 h-72 object-cover rounded-2xl mb-3 sm:mb-0 sm:mr-6 shadow-md"
+                    />
 
-              {/* Danh sách phim */}
-              <div className="space-y-6">
-                {movies.map((m) => (
-                  <div key={m.title} className="border-b pb-4">
-                    <div className="flex gap-4">
-                      <img
-                        src={m.image}
-                        alt={m.title}
-                        className="w-24 h-36 rounded-md object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="bg-orange-500 text-white px-2 py-0.5 text-sm rounded-md">
-                            {m.rating}
-                          </span>
-                          <h3 className="text-lg font-semibold">{m.title}</h3>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">{m.genre}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {m.times.map((t) => (
-                            <Button
-                              key={t}
-                              variant="outline"
-                              size="sm"
-                              className="rounded-full"
-                            >
-                              {t}
-                            </Button>
-                          ))}
-                        </div>
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg text-gray-800">
+                          {movie.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-2">
+                          {movie.genre} • {movie.language}
+                        </p>
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {movie.description}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-4 mt-4">
+                        {Object.entries(showtimesByRoom).map(
+                          ([roomName, shows]: [string, any]) => (
+                            <div key={roomName}>
+                              <div className="font-medium text-gray-700 mb-2">
+                                2D Phụ đề | {roomName}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {shows.map((show: any, idx: number) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() =>
+                                      setSelectedShowtime(show.timeStart)
+                                    }
+                                    className="px-4 py-1 border border-blue-400 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition"
+                                  >
+                                    {show.timeStart} ~ {show.timeEnd}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
-
-      <Button className="mt-6 bg-pink-600 hover:bg-pink-700">Xem tất cả</Button>
     </div>
   );
 }

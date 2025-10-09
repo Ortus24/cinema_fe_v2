@@ -243,7 +243,7 @@ const Header: React.FC = () => {
                       Log In
                     </Link>
                     <Link
-                      href="/"
+                      href="/signup"
                       className="py-4 px-8 bg-transparent border border-primary text-base leading-4 block w-fit text-primary rounded-full font-semibold mt-3 hover:bg-primary hover:text-white duration-300"
                     >
                       Sign up
