@@ -31,21 +31,20 @@ const Categories = () => {
                 icon="ph:house-simple-fill"
                 className="text-2xl text-primary "
               />
-              Best movie
+              Rạp Phim Trong Tầm Tay
             </p>
             <h2 className="lg:text-52 text-40 mt-4 mb-2 lg:max-w-full font-medium leading-[1.2] text-dark dark:text-white">
-              Explore the top movies that are making waves right now.
+              Cập nhật nhanh nhất các suất chiếu, phim mới và ưu đãi vé.
             </h2>
             <p className="text-dark/50 dark:text-white/50 text-lg lg:max-w-full leading-[1.3] md:max-w-3/4">
-              From action-packed blockbusters to heartwarming dramas, these are
-              the films you can’t miss. Get your tickets now and be part of the
-              excitement
+              Chỉ vài cú nhấp, bạn đã sẵn sàng cho một buổi xem phim trọn vẹn
+              tại rạp yêu thích.
             </p>
             <Link
               href="/properties"
               className="py-4 px-8 bg-primary text-base leading-4 block w-fit text-white rounded-full font-semibold mt-8 hover:bg-dark duration-300"
             >
-              View properties
+              Danh sách phim
             </Link>
           </div>
           <div className="lg:col-span-6 col-span-12">

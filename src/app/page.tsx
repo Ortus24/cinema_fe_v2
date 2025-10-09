@@ -15,11 +15,6 @@ export default function Home() {
       <Services />
       <Properties />
       <SchedulePage />
-      {/* <FeaturedProperty />
-      <Testimonial />
-      <BlogSmall />
-      <GetInTouch /> */}
-      {/* <FAQ /> */}
     </main>
   );
 }

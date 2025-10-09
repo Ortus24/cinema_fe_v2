@@ -198,7 +198,10 @@ export default function SchedulePage() {
    🎨 Giao diện
   ======================= */
   return (
-    <div className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 min-h-screen">
+    <div
+      id="schedule-section"
+      className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 min-h-screen"
+    >
       {/* Sidebar RẠP */}
       <div className="md:w-1/4 bg-white rounded-2xl shadow-md p-4 h-fit sticky top-6">
         <h2 className="text-lg font-semibold text-pink-600 mb-3 text-center">
