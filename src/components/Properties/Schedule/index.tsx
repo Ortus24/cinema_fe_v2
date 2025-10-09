@@ -255,9 +255,20 @@ export default function SchedulePage() {
         {/* Danh sách phim */}
         <div className="bg-gradient-to-br from-pink-50 to-white shadow-inner rounded-xl border border-pink-100 p-4 mb-6 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50">
           {moviesByTitle.length === 0 ? (
-            <p className="text-center text-gray-500 mt-8">
-              Không có suất chiếu nào cho ngày này.
-            </p>
+            <div className="flex flex-col items-center justify-center mt-10 text-center animate-fadeIn">
+              <img
+                src="https://cinema-minio.onrender.com/cinema-bucket/image/2a37aad2-a5fd-421e-88d0-243b35627f6b-4076549.png"
+                alt="No movies"
+                className="w-40 h-40 mb-4 opacity-80"
+              />
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                Oops! Không có suất chiếu nào trong ngày này 🎬
+              </h3>
+              <p className="text-gray-500 text-sm max-w-sm">
+                Vui lòng chọn ngày khác hoặc thử một rạp chiếu khác để xem các
+                suất chiếu đang hoạt động.
+              </p>
+            </div>
           ) : (
             <div className="flex flex-col gap-8">
               {moviesByTitle.map((movie: any) => {
