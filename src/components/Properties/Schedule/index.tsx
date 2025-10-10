@@ -9,6 +9,7 @@ import SeatSelectionModal from "../Seat";
  🎥 TypeScript Types
 ======================= */
 type Movie = {
+  movie_id: number;
   title: string;
   duration: number;
   genre: string;
@@ -64,6 +65,12 @@ export default function SchedulePage() {
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(
     null
   );
+
+  const [setSelectedMovieTitles, setSelectedMovieTitle] = useState<
+    string | null
+  >(null);
+
+  const [selectedShowtimes, setShowtime] = useState<string | null>(null);
 
   /* =======================
    🗓️ Tạo danh sách ngày
@@ -325,9 +332,13 @@ export default function SchedulePage() {
                                 {shows.map((show: any, idx: number) => (
                                   <button
                                     key={idx}
-                                    onClick={() =>
-                                      setSelectedShowtimeId(show.showtime_id)
-                                    }
+                                    onClick={() => {
+                                      setSelectedShowtimeId(show.showtime_id);
+                                      setShowtime(
+                                        `${show.timeStart} ~ ${show.timeEnd}`
+                                      );
+                                      setSelectedMovieTitle(movie.title);
+                                    }}
                                     // 🟢 dùng id suất chiếu
                                     className="px-4 py-1 border border-blue-400 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition"
                                   >
@@ -351,6 +362,8 @@ export default function SchedulePage() {
       {selectedShowtimeId && (
         <SeatSelectionModal
           showtimeId={selectedShowtimeId}
+          movieTitle={setSelectedMovieTitles}
+          showtime={selectedShowtimes}
           onClose={() => setSelectedShowtimeId(null)}
         />
       )}

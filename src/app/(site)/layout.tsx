@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
 import { ThemeProvider } from "next-themes";
@@ -22,21 +22,24 @@ export default function RootLayout({
   session: any;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${font.className} bg-white dark:bg-black antialiased`}>
-        <NextTopLoader color="#07be8a" />
-        <SessionProviderComp session={session}>
-          <ThemeProvider
-            attribute="class"
-            enableSystem={true}
-            defaultTheme="light"
-          >
-            {/* <Header /> */}
-            {children}
-            {/* <Footer /> */}
-          </ThemeProvider>
-        </SessionProviderComp>
-      </body>
-    </html>
+    // <html lang="en">
+    //   <body className={`${font.className} bg-white dark:bg-black antialiased`}>
+    //     <NextTopLoader color="#07be8a" />
+    //     <SessionProviderComp session={session}>
+    //       <ThemeProvider
+    //         attribute="class"
+    //         enableSystem={true}
+    //         defaultTheme="light"
+    //       >
+    <div>
+      <Header />
+      {children}
+      <Footer />
+    </div>
+
+    //       </ThemeProvider>
+    //     </SessionProviderComp>
+    //   </body>
+    // </html>
   );
 }

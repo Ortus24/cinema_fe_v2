@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import router from "next/router";
 
 type Seat = {
   seat_number: string;
@@ -10,13 +11,24 @@ type Seat = {
   price: number;
 };
 
+type Movie = {
+  movie_id: number;
+  title: string;
+  duration: number;
+  genre: string;
+};
+
 interface SeatSelectionModalProps {
   showtimeId: number | null;
+  movieTitle: string | null;
+  showtime: string | null;
   onClose: () => void;
 }
 
 export default function SeatSelectionModal({
   showtimeId,
+  movieTitle,
+  showtime,
   onClose,
 }: SeatSelectionModalProps) {
   // const [selectedSeats, setSelectedSeats] = useState<string[]>([]); // giả lập danh sách ghế đã chọn
@@ -58,6 +70,18 @@ export default function SeatSelectionModal({
     fetchSeats();
   }, [showtimeId]);
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Kiểm tra message gửi từ /info
+      if (event.data?.type === "PAYOS_CLOSE_IFRAME") {
+        setPaymentData(null); // Đóng iframe
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
   const router = useRouter();
 
   const handleSelectSeat = (seat: Seat) => {
@@ -88,15 +112,22 @@ export default function SeatSelectionModal({
   const handlePayment = async () => {
     try {
       setLoading(true);
+      // Tạo orderId ngẫu nhiên, có thể dùng nhiều lần trong 1 giờ (ví dụ: timestamp + random)
+      const orderId = Number(
+        `${Date.now()}${Math.floor(Math.random() * 1000)
+          .toString()
+          .padStart(3, "0")}`
+      );
+
       const response = await fetch(
         "https://cinema-booking-l32q.onrender.com/payos/create-payment",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            orderId: Date.now(),
+            orderId, // Mã đơn hàng ngẫu nhiên
             // amount: totalPrice,
-            amount: 2000, // tạm thời để 1000đ cho dễ test
+            amount: 2000, // tạm thời để 2000đ cho dễ test
             description: `Thanh toán các ghế: ${selectedSeats.join(", ")}`,
           }),
         }
@@ -228,6 +259,30 @@ export default function SeatSelectionModal({
               </div>
             </div>
 
+            {/* Thông tin phim + giờ chiếu*/}
+            {showtimeId && (
+              <div className="flex justify-between items-center w-full mt-6 border-t pt-4">
+                {/* <h3 className="text-lg font-semibold text-gray-700"></h3>
+                  {movieId
+                    ? `Phim ID: ${movieId}`
+                    : "Thông tin phim không có sẵn"}
+                </h3> */}
+                {/* <p className="text-gray-500">Suất chiếu ID: {movieTitle}</p> */}
+                <p className="text-sm">
+                  Phim:{" "}
+                  <span className="text-pink-600">
+                    {movieTitle || "Chưa chọn"}
+                  </span>
+                </p>
+                <p className="text-sm">
+                  Giờ chiếu:{" "}
+                  <span className="text-pink-600">
+                    {showtime || "Chưa chọn"}
+                  </span>
+                </p>
+              </div>
+            )}
+
             {/* Tổng tiền + Nút mua */}
             <div className="flex justify-between items-center w-full mt-6 border-t pt-4">
               <div className="text-gray-700">
@@ -238,7 +293,7 @@ export default function SeatSelectionModal({
                   </span>
                 </p>
                 <p className="text-sm mt-1">
-                  Tổng tiền:{" "}
+                  Tạm tính:{" "}
                   <span className="font-semibold text-pink-600">
                     {totalPrice.toLocaleString("vi-VN")} đ
                   </span>
@@ -264,39 +319,27 @@ export default function SeatSelectionModal({
 
       {/* Hiển thị thông tin thanh toán nếu có */}
       {paymentData && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-lg">
-            <button
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4"
+          style={{
+            background: "rgba(0,0,0,0.45)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+          }}
+        >
+          <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+            {/* <button
               onClick={() => setPaymentData(null)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
             >
               ×
-            </button>
+            </button> */}
 
-            <h2 className="text-xl font-bold text-center mb-4 text-gray-800">
-              Thanh toán vé xem phim 🎬
-            </h2>
-
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-                paymentData.qrCode
-              )}&size=200x200`}
-              alt="QR Code"
-              className="mx-auto mb-4"
-            />
-
-            <p className="text-center text-gray-700 mb-4">
-              Quét mã QR hoặc nhấn nút bên dưới để thanh toán.
-            </p>
-
-            <a
-              href={paymentData.checkoutUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-center bg-pink-600 text-white py-2 rounded-full font-semibold hover:bg-pink-700 transition"
-            >
-              Mở trang thanh toán
-            </a>
+            <iframe
+              src={paymentData.checkoutUrl}
+              className="w-full h-full rounded-lg"
+              title="Thanh toán PayOS"
+            ></iframe>
           </div>
         </div>
       )}
