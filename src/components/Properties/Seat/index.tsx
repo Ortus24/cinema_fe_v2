@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Seat = {
   seat_number: string;
@@ -18,6 +19,10 @@ export default function SeatSelectionModal({
   showtimeId,
   onClose,
 }: SeatSelectionModalProps) {
+  // const [selectedSeats, setSelectedSeats] = useState<string[]>([]); // giả lập danh sách ghế đã chọn
+  const [paymentData, setPaymentData] = useState<any>(null);
+  // const [loading, setLoading] = useState(false);
+
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,6 +58,8 @@ export default function SeatSelectionModal({
     fetchSeats();
   }, [showtimeId]);
 
+  const router = useRouter();
+
   const handleSelectSeat = (seat: Seat) => {
     if (seat.is_booked) return;
     setSelectedSeats((prev) =>
@@ -76,6 +83,37 @@ export default function SeatSelectionModal({
 
     // Ghế thường (Standard, Thuong,...)
     return "bg-blue-500 text-white hover:bg-blue-600";
+  };
+
+  const handlePayment = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        "https://cinema-booking-l32q.onrender.com/payos/create-payment",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: Date.now(),
+            // amount: totalPrice,
+            amount: 2000, // tạm thời để 1000đ cho dễ test
+            description: `Thanh toán các ghế: ${selectedSeats.join(", ")}`,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (result.code === "00") {
+        setPaymentData(result.data);
+      } else {
+        alert("Tạo thanh toán thất bại!");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Có lỗi xảy ra khi tạo thanh toán!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!showtimeId) return null;
@@ -207,20 +245,61 @@ export default function SeatSelectionModal({
                 </p>
               </div>
 
+              {/* Nút mua vé */}
               <button
-                disabled={selectedSeats.length === 0}
-                className={`px-6 py-3 rounded-full font-semibold ${
+                onClick={handlePayment}
+                disabled={selectedSeats.length === 0 || loading}
+                className={`px-6 py-3 rounded-full font-semibold transition ${
                   selectedSeats.length > 0
                     ? "bg-pink-600 text-white hover:bg-pink-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
-                Mua vé
+                {loading ? "Đang tạo thanh toán..." : "Mua vé"}
               </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Hiển thị thông tin thanh toán nếu có */}
+      {paymentData && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 relative shadow-lg">
+            <button
+              onClick={() => setPaymentData(null)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
+            >
+              ×
+            </button>
+
+            <h2 className="text-xl font-bold text-center mb-4 text-gray-800">
+              Thanh toán vé xem phim 🎬
+            </h2>
+
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
+                paymentData.qrCode
+              )}&size=200x200`}
+              alt="QR Code"
+              className="mx-auto mb-4"
+            />
+
+            <p className="text-center text-gray-700 mb-4">
+              Quét mã QR hoặc nhấn nút bên dưới để thanh toán.
+            </p>
+
+            <a
+              href={paymentData.checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-center bg-pink-600 text-white py-2 rounded-full font-semibold hover:bg-pink-700 transition"
+            >
+              Mở trang thanh toán
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

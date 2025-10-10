@@ -48,7 +48,7 @@ const Hero: React.FC = () => {
         </div>
         <div className="md:absolute bottom-0 md:-right-68 xl:right-0 bg-white dark:bg-black py-12 px-8 mobile:px-16 md:pl-16 md:pr-[295px] rounded-2xl md:rounded-none md:rounded-tl-2xl mt-24">
           <div className="grid grid-cols-2 sm:grid-cols-4 md:flex gap-16 md:gap-24 sm:text-center dark:text-white text-black">
-            <div className="flex flex-col sm:items-center gap-3">
+            {/* <div className="flex flex-col sm:items-center gap-3">
               <Image
                 src={"/images/hero/cinema.png"}
                 alt="sofa"
@@ -118,7 +118,7 @@ const Hero: React.FC = () => {
               <p className="text-sm sm:text-base font-normal text-black/50 dark:text-white/50">
                 For selling price
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
