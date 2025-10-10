@@ -12,9 +12,9 @@ export default function Home() {
   return (
     <main>
       <Hero />
+      <SchedulePage />
       <Services />
       <Properties />
-      <SchedulePage />
     </main>
   );
 }

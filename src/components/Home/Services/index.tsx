@@ -118,7 +118,7 @@ const Categories = () => {
                 />
               </Link>
               <Link
-                href="/luxury-villa"
+                href="/"
                 className="absolute w-full h-full bg-gradient-to-b from-black/0 to-black/80 top-full flex flex-col justify-between pl-10 pb-10 group-hover:top-0 duration-500"
               >
                 <div className="flex justify-end mt-6 mr-6">
@@ -167,7 +167,7 @@ const Categories = () => {
                 />
               </Link>
               <Link
-                href="/office-spaces"
+                href="/"
                 className="absolute w-full h-full bg-gradient-to-b from-black/0 to-black/80 top-full flex flex-col justify-between group-hover:top-0 duration-500"
               >
                 <div className="flex justify-end mt-6 mr-6">
@@ -216,7 +216,7 @@ const Categories = () => {
                 />
               </Link>
               <Link
-                href="/office-spaces"
+                href="/"
                 className="absolute w-full h-full bg-gradient-to-b from-black/0 to-black/80 top-full flex flex-col justify-between group-hover:top-0 duration-500"
               >
                 <div className="flex justify-end mt-6 mr-6">
