@@ -24,17 +24,27 @@ export default function InfoPage() {
       >
         <X size={22} />
       </button>
-
+      12312312312312323
       {cancel === "true" ? (
-        <>
-          <h1 className="text-2xl font-bold mb-4 text-red-600">
-            ❌ Giao dịch đã bị hủy!
+        <div className="flex flex-col items-center bg-white p-8 rounded-xl shadow-lg">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+            <span className="text-4xl text-red-500">✖️</span>
+          </div>
+          <h1 className="text-2xl font-extrabold mb-2 text-red-600">
+            Giao dịch đã bị hủy!
           </h1>
-          <p className="text-gray-600 mb-6">
-            Giao dịch của bạn đã bị hủy. Vui lòng thử lại hoặc liên hệ hỗ trợ
-            nếu cần.
+          <p className="text-gray-600 mb-4 text-center">
+            Giao dịch của bạn đã bị hủy.
+            <br />
+            Vui lòng thử lại hoặc liên hệ hỗ trợ nếu cần.
           </p>
-        </>
+          <button
+            onClick={handleCloseIframe}
+            className="mt-2 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+          >
+            Đóng
+          </button>
+        </div>
       ) : (
         <>
           <h1 className="text-2xl font-bold mb-4 text-pink-600">
