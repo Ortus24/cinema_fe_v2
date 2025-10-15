@@ -108,7 +108,7 @@ export default function SeatSelectionModal({
   const getSeatClass = (seat: Seat) => {
     // Ghế đã đặt
     if (seat.is_booked == "paid") {
-      return "bg-gray-800 text-gray-800 cursor-not-allowed";
+      return "bg-gray-800 text-white cursor-not-allowed";
     }
 
     // Ghế đang đặt
