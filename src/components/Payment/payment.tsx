@@ -24,7 +24,6 @@ export default function InfoPage() {
       >
         <X size={22} />
       </button>
-      12312312312312323
       {cancel === "true" ? (
         <div className="flex flex-col items-center bg-white p-8 rounded-xl shadow-lg">
           <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
