@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function InfoPage() {
   const searchParams = useSearchParams();
@@ -15,6 +16,25 @@ export default function InfoPage() {
   const cancel = searchParams.get("cancel");
   const status = searchParams.get("status");
   const orderCode = searchParams.get("orderCode");
+
+  useEffect(() => {
+    if (cancel == "true") {
+      const postCancel = async () => {
+        try {
+          const a = await fetch(
+            `https://cinema-booking-l32q.onrender.com/booking/${orderCode}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } catch {}
+      };
+      postCancel();
+    }
+  }, [cancel]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">

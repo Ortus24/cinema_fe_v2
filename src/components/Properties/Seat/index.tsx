@@ -130,6 +130,7 @@ export default function SeatSelectionModal({
 
   const handlePayment = async () => {
     if (token) {
+      let bookingOrder = -1;
       try {
         setLoading(true);
         // Tạo orderId ngẫu nhiên, có thể dùng nhiều lần trong 1 giờ (ví dụ: timestamp + random)
@@ -158,6 +159,7 @@ export default function SeatSelectionModal({
         );
 
         const data = await booking.json();
+        // alert(JSON.stringify(data, null, 2));
         const bookingId = Number(data.booking.id);
 
         const response = await fetch(
@@ -175,14 +177,35 @@ export default function SeatSelectionModal({
         );
 
         const result = await response.json();
+        // alert(JSON.stringify(result, null, 2));
+
         if (result.code === "00") {
           setPaymentData(result.data);
         } else {
-          alert("Tạo thanh toán thất bại!");
+          const response1 = await fetch(
+            `https://cinema-booking-l32q.onrender.com/booking/${bookingId}`,
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+          // const data1 = await response1.json();
+          // alert(JSON.stringify(data1, null, 2));
+          // alert("Tạo thanh toán thất bại!");
         }
       } catch (err) {
         console.error(err);
         alert("Có lỗi xảy ra khi tạo thanh toán!");
+        if (bookingOrder != -1) {
+          await fetch(
+            `https://cinema-booking-l32q.onrender.com/booking/${bookingOrder}`,
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+        alert("Tạo thanh toán thất bại!");
       } finally {
         setLoading(false);
       }
