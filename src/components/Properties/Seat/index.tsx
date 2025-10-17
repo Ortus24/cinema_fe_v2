@@ -39,6 +39,7 @@ export default function SeatSelectionModal({
   const [selectedSeatIds, setSelectedSeatIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [bookingCode, setBookingCode] = useState<number>(-1);
 
   const totalPrice = useMemo(() => {
     return seats
@@ -78,16 +79,33 @@ export default function SeatSelectionModal({
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Kiểm tra message gửi từ /info
       if (event.data?.type === "PAYOS_CLOSE_IFRAME") {
-        setPaymentData(null); // Đóng iframe
+        setPaymentData(null);
         fetchSeats();
+        setSelectedSeatIds([]); // reset selected seat ids
+        setSelectedSeats([]); // reset selected seat labels
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, []);
+
+  window.addEventListener("beforeunload", () => {
+    if (bookingCode > 0) {
+      fetch("https://cinema-booking-l32q.onrender.com/booking/cancel-beacon", {
+        method: "POST",
+        body: JSON.stringify({
+          orderCode: bookingCode,
+          reason: "tab closed",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        keepalive: true, // 👈 Cho phép chạy khi tab unload
+      });
+    }
+  });
 
   const router = useRouter();
 
@@ -161,6 +179,7 @@ export default function SeatSelectionModal({
         const data = await booking.json();
         // alert(JSON.stringify(data, null, 2));
         const bookingId = Number(data.booking.id);
+        setBookingCode(bookingId);
 
         const response = await fetch(
           "https://cinema-booking-l32q.onrender.com/payos/create-payment",
