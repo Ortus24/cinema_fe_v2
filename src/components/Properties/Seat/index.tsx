@@ -57,10 +57,10 @@ export default function SeatSelectionModal({
     setLoading(true);
     try {
       const res = await fetch(
-        `https://cinema-booking-l32q.onrender.com/showtime/${showtimeId}`
+        `https://cinema-booking-l32q.onrender.com/showtimes/${showtimeId}`
       );
       const data = await res.json();
-      setSeats(data);
+      setSeats(Array.isArray(data.seatInfo) ? data.seatInfo : []);
     } catch (err) {
       console.error("Lỗi khi tải danh sách ghế:", err);
     } finally {
@@ -164,10 +164,9 @@ export default function SeatSelectionModal({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+              Authorization: `${token}`,
             },
             body: JSON.stringify({
-              create_date: "2025-10-13 16:24:15",
               ticket: selectedSeatIds.map((id) => ({
                 seat_id: id,
                 showtime_id: showtimeId,
@@ -177,40 +176,44 @@ export default function SeatSelectionModal({
         );
 
         const data = await booking.json();
-        // alert(JSON.stringify(data, null, 2));
-        const bookingId = Number(data.booking.id);
-        setBookingCode(bookingId);
+        alert(JSON.stringify(data, null, 2));
+        console.log(data);
 
-        const response = await fetch(
-          "https://cinema-booking-l32q.onrender.com/payos/create-payment",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: bookingId,
-              // amount: totalPrice,
-              amount: 2000,
-              description: `Thanh toán các ghế : ${selectedSeats.join(", ")}`,
-            }),
-          }
-        );
+        if (data.booking) {
+          const bookingId = Number(data.booking.id);
+          setBookingCode(bookingId);
 
-        const result = await response.json();
-        // alert(JSON.stringify(result, null, 2));
-
-        if (result.code === "00") {
-          setPaymentData(result.data);
-        } else {
-          const response1 = await fetch(
-            `https://cinema-booking-l32q.onrender.com/booking/${bookingId}`,
+          const response = await fetch(
+            "https://cinema-booking-l32q.onrender.com/payos/create-payment",
             {
-              method: "DELETE",
+              method: "POST",
               headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: 255555525434524,
+                // amount: totalPrice,
+                amount: 2000,
+                description: `Thanh toán các ghế : ${selectedSeats.join(", ")}`,
+              }),
             }
           );
-          // const data1 = await response1.json();
-          // alert(JSON.stringify(data1, null, 2));
-          // alert("Tạo thanh toán thất bại!");
+
+          const result = await response.json();
+          // alert(JSON.stringify(result, null, 2));
+
+          if (result.code === "00") {
+            setPaymentData(result.data);
+          } else {
+            const response1 = await fetch(
+              `https://cinema-booking-l32q.onrender.com/booking/${bookingId}`,
+              {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+            // const data1 = await response1.json();
+            // alert(JSON.stringify(data1, null, 2));
+            // alert("Tạo thanh toán thất bại!");
+          }
         }
       } catch (err) {
         console.error(err);

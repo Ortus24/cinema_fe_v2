@@ -259,14 +259,52 @@ export default function SchedulePage() {
         </div>
 
         {loading ? (
-          <p className="text-center py-10 text-gray-500">Đang tải...</p>
+          <div className="flex flex-col items-center justify-center py-10">
+            <svg
+              className="animate-spin h-16 w-16 text-pink-500 mb-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+            <div className="text-center text-gray-500 text-lg font-medium">
+              Đang tải lịch chiếu...
+            </div>
+          </div>
         ) : (
           <div className="bg-white p-4 rounded-xl shadow-inner max-h-[800px] overflow-y-auto">
             {moviesByTitle.length === 0 ? (
-              <p className="text-center text-gray-600 mt-10">
-                Không có suất chiếu
-              </p>
+              <div className="flex flex-col items-center justify-center mt-10 text-center animate-fadeIn">
+                <img
+                  src="https://cinema-minio.onrender.com/cinema-bucket/image/5e2aedef-0d08-4d45-bbbd-27f542a1f516-4076549.png"
+                  alt="No movies"
+                  className="w-40 h-40 mb-4 opacity-80"
+                />
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  Oops! Không có suất chiếu nào trong ngày này 🎬
+                </h3>
+                <p className="text-gray-500 text-sm max-w-sm">
+                  Vui lòng chọn ngày khác hoặc thử một rạp chiếu khác để xem các
+                  suất chiếu đang hoạt động.
+                </p>
+              </div>
             ) : (
+              // <p className="text-center text-gray-600 mt-10">
+              //   Không có suất chiếu
+              // </p>
               moviesByTitle.map((movie: any) => {
                 const showtimesByRoom = movie.showtimes.reduce(
                   (acc: any, show: any) => {
@@ -280,24 +318,26 @@ export default function SchedulePage() {
                 return (
                   <div
                     key={movie.title}
-                    className="flex flex-col sm:flex-row bg-white border rounded-2xl p-4 shadow-sm"
+                    className="flex flex-col sm:flex-row bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden p-4"
                   >
                     <img
                       src={movie.image_url}
                       alt={movie.title}
-                      className="w-full sm:w-56 h-72 object-cover rounded-2xl sm:mr-6"
+                      className="w-full sm:w-56 h-72 object-cover rounded-2xl mb-3 sm:mb-0 sm:mr-6 shadow-md"
                     />
 
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-800">
-                        {movie.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-2">
-                        {movie.genre} • {movie.language}
-                      </p>
-                      <p className="text-sm text-gray-600 line-clamp-3">
-                        {movie.description}
-                      </p>
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg text-gray-800">
+                          {movie.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-2">
+                          {movie.genre} • {movie.language}
+                        </p>
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {movie.description}
+                        </p>
+                      </div>
 
                       {Object.entries(showtimesByRoom).map(
                         ([roomName, shows]: any) => (
