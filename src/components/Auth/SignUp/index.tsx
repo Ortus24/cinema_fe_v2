@@ -73,6 +73,15 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
         </div>
         <div className="mb-[22px]">
           <input
+            type="phone"
+            placeholder="Phone"
+            name="phone"
+            required
+            className="w-full rounded-md border border-black/10 dark:border-white/20 border-solid bg-transparent px-5 py-3 text-base text-dark outline-none transition placeholder:text-gray-300 focus:border-primary focus-visible:shadow-none dark:text-white dark:focus:border-primary"
+          />
+        </div>
+        <div className="mb-[22px]">
+          <input
             type="email"
             placeholder="Email"
             name="email"
@@ -113,7 +122,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
       <p className="text-center text-base">
         Already have an account?
         <Link
-          href="/"
+          href="/signin"
           className="pl-2 text-primary hover:bg-darkprimary hover:underline"
         >
           Sign In

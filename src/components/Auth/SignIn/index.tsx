@@ -113,7 +113,7 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
       </div>
       <p className="text-body-secondary text-base text-center">
         Not a member yet?{" "}
-        <Link href="/" className="text-primary hover:underline">
+        <Link href="/signup" className="text-primary hover:underline">
           Sign Up
         </Link>
       </p>

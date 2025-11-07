@@ -28,7 +28,6 @@ type Cinema = {
 type Room = {
   room_id: number;
   name: string;
-  capacity: number;
   cinema: Cinema;
 };
 
@@ -47,6 +46,7 @@ type DateItem = {
   dayOfWeek: string;
   label: string;
   fullDate: string;
+  apiDate: string;
 };
 
 /* =======================
@@ -80,18 +80,25 @@ export default function SchedulePage() {
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
+
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear();
+
+      const dayStr = day < 10 ? "0" + day : day;
+      const monthStr = month < 10 ? "0" + month : month;
+
       return {
         id: i,
-        date: date.getDate(),
-        month: date.getMonth() + 1,
+        date: day,
+        month: month,
         dayOfWeek: daysOfWeek[date.getDay()],
         label:
           i === 0
             ? "Hôm nay"
-            : `${daysOfWeek[date.getDay()]} ${date.getDate()}/${
-                date.getMonth() + 1
-              }`,
-        fullDate: date.toISOString().split("T")[0],
+            : `${daysOfWeek[date.getDay()]} ${dayStr}/${monthStr}`,
+        fullDate: `${year}-${monthStr}-${dayStr}`,
+        apiDate: `${dayStr}/${monthStr}/${year}`,
       };
     });
   };
@@ -99,10 +106,9 @@ export default function SchedulePage() {
   const dates = generateDates();
 
   /* =======================
-   📡 Lấy dữ liệu từ API
+   📡 Fetch API
   ======================= */
   useEffect(() => {
-    // 🏢 Lấy toàn bộ cinema
     const fetchCinemas = async () => {
       setLoading(true);
       try {
@@ -120,11 +126,10 @@ export default function SchedulePage() {
       }
     };
 
-    // 🎞️ Lấy toàn bộ showtime
     const fetchShowtimes = async () => {
       try {
         const res = await fetch(
-          "https://cinema-booking-l32q.onrender.com/showtimes"
+          "https://cinema-booking-l32q.onrender.com/showtimes/current"
         );
         const data: Showtime[] = await res.json();
         setShowtimeData(data);
@@ -138,7 +143,7 @@ export default function SchedulePage() {
   }, []);
 
   /* =======================
-   🔍 Lọc rạp theo từ khóa
+   🔍 Lọc rạp theo tìm kiếm
   ======================= */
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -153,27 +158,29 @@ export default function SchedulePage() {
   }, [searchQuery, cinemas]);
 
   /* =======================
- 🎦 Lọc phim theo rạp & ngày
-======================= */
+  🎦 Lọc phim theo rạp + ngày
+  ======================= */
+  const selectedApiDate = dates[selectedDate]?.apiDate;
+
   const filteredShowtimes = showtimeData.filter((item) => {
     const matchTheater =
       !selectedTheater || item.room.cinema.cinema_id === selectedTheater;
-
     const matchDate =
-      selectedDate !== null &&
-      selectedDate !== undefined &&
-      item.start_time.startsWith(dates[selectedDate].fullDate);
-
+      selectedApiDate && item.start_time.startsWith(selectedApiDate);
     return matchTheater && matchDate;
   });
 
-  // ✅ Gom các phim và giờ chiếu theo phòng
   const moviesByTitle = Object.values(
     filteredShowtimes.reduce((acc: any, item) => {
       const title = item.movie.title;
-      const start = new Date(item.start_time);
-      const end = new Date(start.getTime() + item.movie.duration * 60000);
 
+      const [datePart, timePart] = item.start_time.split(" ");
+      const [day, month, year] = datePart.split("/");
+      const isoString = `${year}-${month}-${day}T${timePart}`;
+      const start = new Date(isoString);
+      if (isNaN(start.getTime())) return acc;
+
+      const end = new Date(start.getTime() + item.movie.duration * 60000);
       const startTime = start.toLocaleTimeString("vi-VN", {
         hour: "2-digit",
         minute: "2-digit",
@@ -183,13 +190,7 @@ export default function SchedulePage() {
         minute: "2-digit",
       });
 
-      if (!acc[title]) {
-        acc[title] = {
-          ...item.movie,
-          showtimes: [],
-        };
-      }
-
+      if (!acc[title]) acc[title] = { ...item.movie, showtimes: [] };
       acc[title].showtimes.push({
         showtime_id: item.showtime_id,
         roomName: item.room.name,
@@ -202,14 +203,11 @@ export default function SchedulePage() {
   );
 
   /* =======================
-   🎨 Giao diện
+   🎨 UI
   ======================= */
   return (
-    <div
-      id="schedule-section"
-      className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 min-h-screen"
-    >
-      {/* Sidebar RẠP */}
+    <div className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 min-h-screen">
+      {/* Sidebar Rạp */}
       <div className="md:w-1/4 bg-white rounded-2xl shadow-md p-4 h-fit sticky top-6">
         <h2 className="text-lg font-semibold text-pink-600 mb-3 text-center">
           🎦 Danh sách rạp
@@ -218,13 +216,12 @@ export default function SchedulePage() {
         <input
           type="text"
           placeholder="🔍 Tìm rạp chiếu..."
-          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-pink-400 outline-none mb-4"
+          className="w-full p-2 border rounded-lg mb-4"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
 
-        {/* Danh sách rạp có thể cuộn */}
-        <div className="space-y-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-pink-400 scrollbar-track-gray-100">
+        <div className="space-y-2 max-h-[70vh] overflow-y-auto">
           {filteredTheaters.map((theater) => (
             <div
               key={theater.cinema_id}
@@ -235,10 +232,8 @@ export default function SchedulePage() {
                   : "border-transparent hover:bg-gray-50"
               }`}
             >
-              <div className="flex flex-col">
-                <span className="font-medium">{theater.name}</span>
-                <span className="text-xs text-gray-500">{theater.address}</span>
-              </div>
+              <span className="font-medium">{theater.name}</span>
+              <span className="text-xs text-gray-500">{theater.address}</span>
             </div>
           ))}
         </div>
@@ -250,148 +245,100 @@ export default function SchedulePage() {
           📅 Lịch chiếu phim
         </h1>
 
-        {/* Chọn ngày */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-thin justify-center mb-5">
+        <div className="flex gap-2 overflow-x-auto justify-center mb-5">
           {dates.map((d) => (
             <Button
               key={d.id}
               onClick={() => setSelectedDate(d.id)}
               variant={selectedDate === d.id ? "default" : "outline"}
-              className={`px-4 py-2 rounded-lg ${
-                selectedDate === d.id
-                  ? "bg-pink-500 text-white shadow-md"
-                  : "hover:bg-pink-50"
-              }`}
+              className={selectedDate === d.id ? "bg-pink-500 text-white" : ""}
             >
               {d.label}
             </Button>
           ))}
         </div>
 
-        {/* Danh sách phim */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-10">
-            <svg
-              className="animate-spin h-16 w-16 text-pink-500 mb-4"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-              ></path>
-            </svg>
-            <div className="text-center text-gray-500 text-lg font-medium">
-              Đang tải lịch chiếu...
-            </div>
-          </div>
+          <p className="text-center py-10 text-gray-500">Đang tải...</p>
         ) : (
-          <div className="bg-gradient-to-br from-pink-50 to-white shadow-inner rounded-xl border border-pink-100 p-4 mb-6 max-h-[800px] overflow-y-auto scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50">
+          <div className="bg-white p-4 rounded-xl shadow-inner max-h-[800px] overflow-y-auto">
             {moviesByTitle.length === 0 ? (
-              <div className="flex flex-col items-center justify-center mt-10 text-center animate-fadeIn">
-                <img
-                  src="https://cinema-minio.onrender.com/cinema-bucket/image/5e2aedef-0d08-4d45-bbbd-27f542a1f516-4076549.png"
-                  alt="No movies"
-                  className="w-40 h-40 mb-4 opacity-80"
-                />
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                  Oops! Không có suất chiếu nào trong ngày này 🎬
-                </h3>
-                <p className="text-gray-500 text-sm max-w-sm">
-                  Vui lòng chọn ngày khác hoặc thử một rạp chiếu khác để xem các
-                  suất chiếu đang hoạt động.
-                </p>
-              </div>
+              <p className="text-center text-gray-600 mt-10">
+                Không có suất chiếu
+              </p>
             ) : (
-              <div className="flex flex-col gap-8">
-                {moviesByTitle.map((movie: any) => {
-                  const showtimesByRoom = movie.showtimes.reduce(
-                    (acc: any, show: any) => {
-                      if (!acc[show.roomName]) acc[show.roomName] = [];
-                      acc[show.roomName].push(show);
-                      return acc;
-                    },
-                    {}
-                  );
+              moviesByTitle.map((movie: any) => {
+                const showtimesByRoom = movie.showtimes.reduce(
+                  (acc: any, show: any) => {
+                    if (!acc[show.roomName]) acc[show.roomName] = [];
+                    acc[show.roomName].push(show);
+                    return acc;
+                  },
+                  {}
+                );
 
-                  return (
-                    <div
-                      key={movie.title}
-                      className="flex flex-col sm:flex-row bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden p-4"
-                    >
-                      <img
-                        src={movie.image_url}
-                        alt={movie.title}
-                        className="w-full sm:w-56 h-72 object-cover rounded-2xl mb-3 sm:mb-0 sm:mr-6 shadow-md"
-                      />
+                return (
+                  <div
+                    key={movie.title}
+                    className="flex flex-col sm:flex-row bg-white border rounded-2xl p-4 shadow-sm"
+                  >
+                    <img
+                      src={movie.image_url}
+                      alt={movie.title}
+                      className="w-full sm:w-56 h-72 object-cover rounded-2xl sm:mr-6"
+                    />
 
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div>
-                          <h3 className="font-semibold text-lg text-gray-800">
-                            {movie.title}
-                          </h3>
-                          <p className="text-sm text-gray-500 mb-2">
-                            {movie.genre} • {movie.language}
-                          </p>
-                          <p className="text-sm text-gray-600 line-clamp-3">
-                            {movie.description}
-                          </p>
-                        </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-800">
+                        {movie.title}
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-2">
+                        {movie.genre} • {movie.language}
+                      </p>
+                      <p className="text-sm text-gray-600 line-clamp-3">
+                        {movie.description}
+                      </p>
 
-                        <div className="flex flex-col gap-4 mt-4">
-                          {Object.entries(showtimesByRoom).map(
-                            ([roomName, shows]: [string, any]) => (
-                              <div key={roomName}>
-                                <div className="font-medium text-gray-700 mb-2">
-                                  2D Phụ đề | {roomName}
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  {shows.map((show: any, idx: number) => (
-                                    <button
-                                      key={idx}
-                                      onClick={() => {
-                                        setSelectedShowtimeId(show.showtime_id);
-                                        setSelectedShowtimeLabel(
-                                          `${show.timeStart} ~ ${show.timeEnd}`
-                                        );
-                                        setSelectedMovieTitle(movie.title);
-                                      }}
-                                      className="px-4 py-1 border border-blue-400 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition"
-                                    >
-                                      {show.timeStart} ~ {show.timeEnd}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
+                      {Object.entries(showtimesByRoom).map(
+                        ([roomName, shows]: any) => (
+                          <div key={roomName} className="mt-4">
+                            <div className="font-medium text-gray-700 mb-2">
+                              2D Phụ đề | {roomName}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {shows.map((show: any, idx: number) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => {
+                                    setSelectedShowtimeId(show.showtime_id);
+                                    setSelectedShowtimeLabel(
+                                      `${show.timeStart} ~ ${show.timeEnd}`
+                                    );
+                                    setSelectedMovieTitle(movie.title);
+                                  }}
+                                  className="px-4 py-1 border border-blue-400 text-blue-600 rounded-lg text-sm hover:bg-blue-50"
+                                >
+                                  {show.timeStart} ~ {show.timeEnd}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      )}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })
             )}
           </div>
         )}
       </div>
 
-      {/* Modal chọn ghế */}
       {selectedShowtimeId && (
         <SeatSelectionModal
           showtimeId={selectedShowtimeId}
-          movieTitle={selectedMovieTitle}
-          showtime={selectedShowtimeLabel}
+          movieTitle={selectedMovieTitle || "Chọn ghế"}
+          showtime={selectedShowtimeLabel || "N/A"}
           onClose={() => setSelectedShowtimeId(null)}
         />
       )}
