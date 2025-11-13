@@ -1,9 +1,6 @@
 "use client";
 
-// Đã xoá các import của Next.js và path alias không được hỗ trợ
-// import HeroSub from "@/components/shared/HeroSub";
-// import Image from "next/image";
-// import { useSearchParams } from "next/navigation";
+import SeatSelectionModal from "@/components/Properties/Seat";
 import { useEffect, useMemo, useState } from "react";
 
 type MovieDetail = {
@@ -47,16 +44,6 @@ type Showtime = {
   cinema_id?: number;
 };
 
-// Ghi chú: Kiểu RoomOption không còn được sử dụng cho sidebar trái
-// type RoomOption = {
-//   room_id: number;
-//   roomName: string;
-//   cinema_id: number;
-//   cinemaName: string;
-//   cinemaAddress: string;
-// };
-
-// --- THAY ĐỔI: Định nghĩa kiểu cho một suất chiếu ---
 type TimeSlotInfo = {
   time: string;
   showtimeId: number;
@@ -65,7 +52,7 @@ type TimeSlotInfo = {
 type RoomSchedule = {
   room_id: number;
   roomName: string;
-  cinema_id: number; // Đã thêm cinema_id để lọc
+  cinema_id: number;
   cinemaName: string;
   cinemaAddress: string;
   sessions: Record<
@@ -73,7 +60,7 @@ type RoomSchedule = {
     {
       dateLabel: string;
       apiDate: string;
-      timeSlots: TimeSlotInfo[]; // <-- THAY ĐỔI: Dùng TimeSlotInfo
+      timeSlots: TimeSlotInfo[];
     }
   >;
 };
@@ -81,13 +68,13 @@ type RoomSchedule = {
 type GroupedShowtimes = {
   room_id: number;
   roomName: string;
-  cinema_id: number; // Đã thêm cinema_id để lọc
+  cinema_id: number;
   cinemaName: string;
   cinemaAddress: string;
   sessions: {
     dateLabel: string;
     apiDate: string;
-    timeSlots: TimeSlotInfo[]; // <-- THAY ĐỔI: Dùng TimeSlotInfo
+    timeSlots: TimeSlotInfo[];
   }[];
 };
 
@@ -97,10 +84,9 @@ type ModalInfo = {
   cinemaAddress: string;
   dateLabel: string;
   time: string;
-  showtimeId: number; // <-- THÊM MỚI
+  showtimeId: number;
 };
 
-// Component HeroSub thay thế (vì import gốc bị lỗi)
 const HeroSub = ({
   title,
   description,
@@ -110,8 +96,8 @@ const HeroSub = ({
   description: string;
   badge: string;
 }) => (
-  <header className="bg-gray-100 py-12">
-    <div className="max-w-6xl mx-auto px-6">
+  <header className="bg-gray-100 py-2">
+    <div className="max-w-5xl mx-auto">
       <span className="text-sm font-semibold text-pink-600 bg-pink-100 px-3 py-1 rounded-full">
         {badge}
       </span>
@@ -124,16 +110,13 @@ const HeroSub = ({
 );
 
 export default function MovieDetail() {
-  // Thay thế `useSearchParams` bằng cách đọc `window.location.search`
   const [movieId, setMovieId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Logic này chỉ chạy trên client-side sau khi component được mount
-    // Nó đọc `movieId` từ URL query string.
     const params = new URLSearchParams(window.location.search);
     const id = params.get("movieId");
     setMovieId(id);
-  }, []); // Mảng rỗng đảm bảo nó chỉ chạy một lần khi mount
+  }, []);
 
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -142,11 +125,20 @@ export default function MovieDetail() {
   const [showtimesLoading, setShowtimesLoading] = useState(false);
   const [showtimesError, setShowtimesError] = useState<string | null>(null);
   const [cinemaMap, setCinemaMap] = useState<Record<number, Cinema>>({});
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(
+    null
+  );
+  const [selectedShowtimeLabel, setSelectedShowtimeLabel] = useState<
+    string | null
+  >(null);
+  const [selectedMovieTitle, setSelectedMovieTitle] = useState<string | null>(
+    null
+  );
 
-  // --- THAY ĐỔI: State cho danh sách rạp và rạp đang chọn ---
-  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [cinemas, setCinemas] = useState<Cinema[]>([]); // Master list
+  // --- THAY ĐỔI: Thêm state cho rạp đã lọc ---
+  const [filteredCinemas, setFilteredCinemas] = useState<Cinema[]>([]);
   const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
-  // --- (Xoá state `rooms` và `selectedRoomId`) ---
 
   const [selectedDateIndex, setSelectedDateIndex] = useState<number>(0);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
@@ -187,7 +179,8 @@ export default function MovieDetail() {
 
         let data = await fetchById();
 
-        // Một số API trả về mảng thay vì object, xử lý fallback
+        setSelectedMovieTitle(data.title);
+
         if (Array.isArray(data)) {
           data = data[0];
         }
@@ -214,7 +207,6 @@ export default function MovieDetail() {
               ? (listData as MovieDetail[]).find(
                   (item) =>
                     item?.movie_id === numericId ||
-                    // fallback trong trường hợp API trả về key khác
                     (item as { id?: number })?.id === numericId
                 )
               : null;
@@ -240,8 +232,6 @@ export default function MovieDetail() {
       }
     };
 
-    // useEffect này sẽ tự động chạy lại khi `movieId` thay đổi
-    // (từ null sang giá trị được đọc từ URL)
     fetchMovie();
   }, [movieId]);
 
@@ -276,29 +266,24 @@ export default function MovieDetail() {
         const res = await fetch(
           "https://cinema-booking-l32q.onrender.com/cinema",
           {
-            cache: "force-cache", // Sử dụng cache để tải danh sách rạp nhanh hơn
+            cache: "force-cache",
           }
         );
         if (!res.ok) return;
         const data: Cinema[] = await res.json();
 
-        // 1. Tạo Map để tra cứu nhanh (như cũ)
         const map = data.reduce<Record<number, Cinema>>((acc, item) => {
           acc[item.cinema_id] = item;
           return acc;
         }, {});
         setCinemaMap(map);
 
-        // 2. THAY ĐỔI: Lưu danh sách rạp đã sắp xếp vào state
         const cinemaList = data.sort((a, b) =>
           a.name.localeCompare(b.name, "vi")
         );
         setCinemas(cinemaList);
 
-        // 3. THAY ĐỔI: Tự động chọn rạp đầu tiên trong danh sách
-        if (cinemaList.length > 0) {
-          setSelectedCinemaId(cinemaList[0].cinema_id);
-        }
+        // --- THAY ĐỔI: Đã xóa logic tự động chọn rạp đầu tiên (setSelectedCinemaId) khỏi đây ---
       } catch (err) {
         console.error("Failed to fetch cinemas:", err);
       }
@@ -386,24 +371,16 @@ export default function MovieDetail() {
     });
   }, []);
 
-  // --- (useEffect [showtimes, cinemaMap] để setRooms đã bị xoá) ---
-
-  // --- THAY ĐỔI: Lọc danh sách RẠP (thay vì phòng) ---
-  const filteredCinemas = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase();
-    if (!keyword) return cinemas;
-    return cinemas.filter(
-      (cinema) =>
-        cinema.name.toLowerCase().includes(keyword) ||
-        cinema.address.toLowerCase().includes(keyword)
-    );
-  }, [cinemas, searchKeyword]);
-
   const roomSchedules = useMemo(() => {
     if (!showtimes.length) return [];
 
-    const normalizeDate = (value: string) => {
-      if (!value) return { dateLabel: "Không xác định", timeLabel: "N/A" };
+    const normalizeDate = (value: string | undefined | null) => {
+      if (!value)
+        return {
+          dateLabel: "Không xác định",
+          timeLabel: "N/A",
+          apiDate: "N/A",
+        };
 
       const slashParts = value.split(" ");
       if (slashParts.length === 2 && slashParts[0].includes("/")) {
@@ -455,10 +432,24 @@ export default function MovieDetail() {
         };
       }
 
+      if (
+        value.includes(":") &&
+        !value.includes("T") &&
+        !value.includes("/") &&
+        !value.includes(" ")
+      ) {
+        const timeOnly = value.split(":").slice(0, 2).join(":"); // Lấy "HH:mm"
+        return {
+          dateLabel: "Không xác định", // Không biết ngày
+          timeLabel: timeOnly,
+          apiDate: "N/A", // Không biết ngày
+        };
+      }
+
       return {
         dateLabel: "Không xác định",
-        timeLabel: value,
-        apiDate: value,
+        timeLabel: "N/A",
+        apiDate: "N/A",
       };
     };
 
@@ -481,7 +472,7 @@ export default function MovieDetail() {
         map.set(roomId, {
           room_id: roomId,
           roomName,
-          cinema_id: cinemaId ?? -1, // THAY ĐỔI: Thêm cinema_id
+          cinema_id: cinemaId ?? -1,
           cinemaName: cinemaInfo?.name ?? "Rạp không xác định",
           cinemaAddress:
             cinemaInfo?.address ??
@@ -495,9 +486,25 @@ export default function MovieDetail() {
       const roomEntry = map.get(roomId);
       if (!roomEntry) return;
 
-      const { dateLabel, timeLabel, apiDate } = normalizeDate(
-        showtime.start_time
-      );
+      const {
+        dateLabel,
+        timeLabel: startTime,
+        apiDate,
+      } = normalizeDate(showtime.start_time);
+
+      let endTime: string | null = null;
+      if (showtime.end_time) {
+        const { timeLabel } = normalizeDate(showtime.end_time);
+        if (timeLabel !== "N/A") {
+          endTime = timeLabel;
+        }
+      }
+
+      const displayTime =
+        endTime && endTime !== startTime
+          ? `${startTime} ~ ${endTime}`
+          : startTime;
+
       const sessionKey = apiDate || dateLabel;
 
       if (!roomEntry.sessions[sessionKey]) {
@@ -508,9 +515,8 @@ export default function MovieDetail() {
         };
       }
 
-      // --- THAY ĐỔI: Lưu object thay vì string ---
       roomEntry.sessions[sessionKey].timeSlots.push({
-        time: timeLabel,
+        time: displayTime,
         showtimeId: showtime.showtime_id,
       });
     });
@@ -518,7 +524,7 @@ export default function MovieDetail() {
     return Array.from(map.values()).map<GroupedShowtimes>((item) => ({
       room_id: item.room_id,
       roomName: item.roomName,
-      cinema_id: item.cinema_id, // THAY ĐỔI: Truyền cinema_id
+      cinema_id: item.cinema_id,
       cinemaName: item.cinemaName,
       cinemaAddress: item.cinemaAddress,
       sessions: Object.entries(item.sessions)
@@ -526,13 +532,56 @@ export default function MovieDetail() {
         .map(([apiDate, session]) => ({
           apiDate,
           dateLabel: session.dateLabel,
-          // --- THAY ĐỔI: Sắp xếp theo thuộc tính 'time' ---
           timeSlots: session.timeSlots.sort((a, b) =>
             a.time.localeCompare(b.time, "vi")
           ),
         })),
     }));
   }, [showtimes, cinemaMap]);
+
+  // --- THAY ĐỔI: Thêm useMemo để lấy rạp CÓ LỊCH CHIẾU ---
+  const availableCinemas = useMemo(() => {
+    if (!roomSchedules.length) return [];
+    // Lấy ID của các rạp có trong lịch chiếu (roomSchedules)
+    const availableCinemaIds = new Set<number>(
+      roomSchedules.map((room) => room.cinema_id)
+    );
+    // Lọc danh sách rạp master (cinemas)
+    return cinemas.filter((cinema) => availableCinemaIds.has(cinema.cinema_id));
+  }, [roomSchedules, cinemas]);
+
+  // --- THAY ĐỔI: Thay thế useMemo của filteredCinemas bằng useEffect để quản lý cả state ---
+  useEffect(() => {
+    // Bước 1: Lọc danh sách rạp CÓ LỊCH CHIẾU (availableCinemas) bằng từ khóa tìm kiếm
+    const keyword = searchKeyword.trim().toLowerCase();
+    const nextList = keyword
+      ? availableCinemas.filter(
+          (cinema) =>
+            cinema.name.toLowerCase().includes(keyword) ||
+            cinema.address.toLowerCase().includes(keyword)
+        )
+      : availableCinemas;
+
+    setFilteredCinemas(nextList); // Cập nhật state cho UI
+
+    // Bước 2: Quản lý rạp đang được chọn (selectedCinemaId)
+    const isSelectedCinemaInList = nextList.some(
+      (cinema) => cinema.cinema_id === selectedCinemaId
+    );
+
+    if (nextList.length > 0) {
+      if (!selectedCinemaId || !isSelectedCinemaInList) {
+        // Nếu chưa chọn rạp nào, HOẶC rạp đang chọn không còn trong danh sách lọc
+        // -> Tự động chọn rạp đầu tiên của danh sách mới
+        setSelectedCinemaId(nextList[0].cinema_id);
+      }
+      // Ngược lại: rạp đang chọn vẫn trong danh sách -> giữ nguyên
+    } else {
+      // Nếu danh sách lọc rỗng (không tìm thấy kết quả)
+      // -> Xóa rạp đang chọn
+      setSelectedCinemaId(null);
+    }
+  }, [availableCinemas, searchKeyword, selectedCinemaId]);
 
   const filteredSchedule = useMemo(() => {
     if (!roomSchedules.length) return [];
@@ -541,7 +590,7 @@ export default function MovieDetail() {
 
     return (
       roomSchedules
-        // THAY ĐỔI: Lọc theo rạp đã chọn (selectedCinemaId) thay vì phòng (selectedRoomId)
+        // Lọc theo rạp đã chọn (selectedCinemaId)
         .filter((room) =>
           selectedCinemaId ? room.cinema_id === selectedCinemaId : true
         )
@@ -560,11 +609,10 @@ export default function MovieDetail() {
         // Lọc ra các phòng không có suất chiếu vào ngày đã chọn
         .filter((room) => room.sessions.length > 0)
     );
-  }, [roomSchedules, selectedCinemaId, selectedDateIndex, dateTabs]); // Phụ thuộc vào selectedCinemaId
+  }, [roomSchedules, selectedCinemaId, selectedDateIndex, dateTabs]);
 
   return (
     <>
-      {/* Đã thay thế <HeroSub> bằng component nội bộ */}
       <HeroSub title={heroTitle} description={heroDescription} badge="Movies" />
       <div className="max-w-6xl mx-auto p-6 space-y-8">
         {!movieId && (
@@ -587,7 +635,7 @@ export default function MovieDetail() {
 
         {!loading && movie && (
           <>
-            <div className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 h-[400px] md:h-[550px] overflow-hidden">
+            <div className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 h-[600px] md:h-[550px] overflow-hidden">
               {movie.trailer_url ? (
                 <>
                   <video
@@ -602,12 +650,10 @@ export default function MovieDetail() {
                   <div className="absolute inset-0 bg-black/45 z-10"></div>
                 </>
               ) : (
-                // Đã thay thế <Image> bằng <img>
                 <img
                   src={movie.image_url}
                   alt={movie.title}
                   className="absolute inset-0 w-full h-full object-cover"
-                  // Thêm fallback
                   onError={(e) =>
                     (e.currentTarget.src =
                       "https://placehold.co/1200x550/e2e8f0/64748b?text=Image+Not+Found")
@@ -616,12 +662,10 @@ export default function MovieDetail() {
               )}
               <div className="absolute bottom-6 left-4 md:left-12 flex items-end gap-6 z-20">
                 <div className="relative w-24 h-36 md:w-56 md:h-72 rounded-xl overflow-hidden shadow-2xl border-2 border-white/80">
-                  {/* Đã thay thế <Image> bằng <img> */}
                   <img
                     src={movie.image_url}
                     alt={movie.title}
                     className="absolute inset-0 w-full h-full object-cover"
-                    // Thêm fallback
                     onError={(e) =>
                       (e.currentTarget.src =
                         "https://placehold.co/224x288/e2e8f0/64748b?text=Poster")
@@ -770,10 +814,9 @@ export default function MovieDetail() {
                 {!showtimesLoading &&
                   !showtimesError &&
                   showtimes.length > 0 && // Kiểm tra xem có showtimes không
-                  filteredSchedule.length === 0 && ( // MỚI: và lịch chiếu đã lọc rỗng
+                  availableCinemas.length === 0 && ( // MỚI: Kiểm tra rạp CÓ LỊCH CHIẾU
                     <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                      Hiện chưa có lịch chiếu cho rạp này vào ngày đã chọn. Vui
-                      lòng chọn rạp hoặc ngày khác.
+                      Hiện chưa có lịch chiếu cho rạp này.
                     </div>
                   )}
 
@@ -802,12 +845,18 @@ export default function MovieDetail() {
                     </div>
 
                     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm max-h-[320px] overflow-y-auto space-y-2">
-                      {filteredCinemas.length === 0 ? (
+                      {/* --- THAY ĐỔI: Thông báo khi không có rạp nào có lịch chiếu --- */}
+                      {!showtimesLoading && availableCinemas.length === 0 ? (
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                          Không có rạp nào có lịch chiếu cho phim này.
+                        </div>
+                      ) : // --- THAY ĐỔI: Thông báo khi tìm kiếm không thấy
+                      filteredCinemas.length === 0 ? (
                         <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
                           Không tìm thấy rạp phù hợp.
                         </div>
                       ) : (
-                        // Lặp qua danh sách rạp đã lọc
+                        // Lặp qua danh sách rạp ĐÃ LỌC (filteredCinemas)
                         filteredCinemas.map((cinema) => (
                           <button
                             key={cinema.cinema_id}
@@ -848,6 +897,15 @@ export default function MovieDetail() {
                       ))}
                     </div>
 
+                    {/* --- THAY ĐỔI: Thông báo khi có rạp nhưng không có lịch chiếu cho NGÀY ĐÃ CHỌN --- */}
+                    {!showtimesLoading &&
+                      availableCinemas.length > 0 &&
+                      filteredSchedule.length === 0 && (
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                          Không có lịch chiếu cho rạp này vào ngày đã chọn.
+                        </div>
+                      )}
+
                     {/* Vòng lặp này bây giờ hiển thị TẤT CẢ các phòng cho RẠP đã chọn */}
                     <div className="space-y-4">
                       {filteredSchedule.map((room) => (
@@ -860,7 +918,6 @@ export default function MovieDetail() {
                               <h5 className="text-base font-semibold text-gray-800">
                                 {room.roomName}
                               </h5>
-                              {/* Tên rạp vẫn được hiển thị, hữu ích nếu không có rạp nào được chọn */}
                               <p className="text-sm text-gray-500">
                                 {room.cinemaName}
                               </p>
@@ -873,17 +930,16 @@ export default function MovieDetail() {
                           <div className="mt-4 space-y-3">
                             {room.sessions.map((session) => (
                               <div
-                                key={session.dateLabel} // dateLabel là duy nhất trong ngữ cảnh này
+                                key={session.dateLabel}
                                 className="rounded-lg bg-white px-4 py-3 shadow-sm"
                               >
                                 <div className="text-sm font-medium text-gray-700">
                                   {session.dateLabel}
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                  {/* --- THAY ĐỔI: Lặp qua slot object --- */}
                                   {session.timeSlots.map((slot) => (
                                     <button
-                                      key={slot.showtimeId} // Đảm bảo key là duy nhất
+                                      key={slot.showtimeId}
                                       className="rounded-lg border border-pink-200 bg-pink-50 px-3 py-1 text-sm font-medium text-pink-600 transition hover:bg-pink-100 hover:border-pink-300 cursor-pointer"
                                       onClick={() =>
                                         setModalInfo({
@@ -892,7 +948,7 @@ export default function MovieDetail() {
                                           cinemaAddress: room.cinemaAddress,
                                           dateLabel: session.dateLabel,
                                           time: slot.time,
-                                          showtimeId: slot.showtimeId, // <-- ĐÃ THÊM
+                                          showtimeId: slot.showtimeId,
                                         })
                                       }
                                     >
@@ -914,15 +970,14 @@ export default function MovieDetail() {
         )}
       </div>
 
-      {/* --- THÊM MỚI: Modal Hiển thị thông tin --- */}
       {modalInfo && (
         <div
           className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
-          onClick={() => setModalInfo(null)} // Bấm vào nền để đóng
+          onClick={() => setModalInfo(null)}
         >
           <div
             className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative"
-            onClick={(e) => e.stopPropagation()} // Ngăn bấm vào modal đóng modal
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setModalInfo(null)}
@@ -983,7 +1038,6 @@ export default function MovieDetail() {
                   {modalInfo.time}
                 </span>
               </p>
-              {/* --- THÊM MỚI: Hiển thị Showtime ID --- */}
               <p>
                 <span className="font-medium text-gray-500 w-20 inline-block">
                   Mã suất:
@@ -994,13 +1048,26 @@ export default function MovieDetail() {
               </p>
             </div>
 
-            <button className="mt-6 w-full bg-pink-600 text-white font-medium py-3 rounded-lg hover:bg-pink-700 transition">
+            <button
+              className="mt-6 w-full bg-pink-600 text-white font-medium py-3 rounded-lg hover:bg-pink-700 transition"
+              onClick={() => {
+                setSelectedShowtimeId(modalInfo.showtimeId);
+                setSelectedShowtimeLabel(modalInfo.time);
+              }}
+            >
               Tiếp tục Đặt vé
             </button>
           </div>
         </div>
       )}
-      {/* --- Hết Modal --- */}
+      {selectedShowtimeId && (
+        <SeatSelectionModal
+          showtimeId={selectedShowtimeId}
+          movieTitle={selectedMovieTitle}
+          showtime={selectedShowtimeLabel}
+          onClose={() => setSelectedShowtimeId(null)}
+        />
+      )}
     </>
   );
 }

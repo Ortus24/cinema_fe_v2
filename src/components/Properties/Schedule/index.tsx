@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import SeatSelectionModal from "../Seat";
+import { useRouter } from "next/navigation";
 
 /* =======================
  🎥 TypeScript Types
@@ -73,7 +74,6 @@ export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState(false);
-
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(
     null
   );
@@ -83,10 +83,16 @@ export default function SchedulePage() {
   const [selectedShowtimeLabel, setSelectedShowtimeLabel] = useState<
     string | null
   >(null);
+  const router = useRouter();
 
   /* =======================
    🗓️ Tạo danh sách ngày
   ======================= */
+
+  const goToDetail = (movieId: number) => {
+    router.push("/movie?movieId=" + movieId);
+  };
+
   const generateDates = (): DateItem[] => {
     const daysOfWeek = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
     const today = new Date();
@@ -267,9 +273,21 @@ export default function SchedulePage() {
    🎨 UI
   ======================= */
   return (
-    <div className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 min-h-screen">
+    <div className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 h-screen overflow-hidden">
+      {/* Thêm CSS cho thanh cuộn */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px; /* Chiều rộng thanh cuộn */
+        }
+
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #081d64ff #faf1ffff;
+        }
+      `}</style>
+
       {/* Sidebar Rạp */}
-      <div className="md:w-1/4 bg-white rounded-2xl shadow-md p-4 h-fit sticky top-6">
+      <div className="md:w-1/4 bg-white rounded-2xl shadow-md p-4 flex flex-col overflow-hidden">
         <h2 className="text-lg font-semibold text-pink-600 mb-3 text-center">
           🎦 Danh sách rạp
         </h2>
@@ -282,7 +300,8 @@ export default function SchedulePage() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
 
-        <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+        {/* Thêm class custom-scrollbar */}
+        <div className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
           {filteredCinemas.length === 0 ? (
             <div className="text-sm text-gray-500 text-center py-6">
               Không tìm thấy rạp phù hợp.
@@ -315,7 +334,7 @@ export default function SchedulePage() {
       </div>
 
       {/* Lịch chiếu */}
-      <div className="flex-1 max-w-5xl">
+      <div className="flex-1 max-w-5xl flex flex-col overflow-hidden">
         <h1 className="text-2xl font-bold text-pink-600 mb-4 text-center">
           📅 Lịch chiếu phim
         </h1>
@@ -351,7 +370,7 @@ export default function SchedulePage() {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-10">
+          <div className="flex-1 flex flex-col items-center justify-center py-10">
             <svg
               className="animate-spin h-16 w-16 text-pink-500 mb-4"
               xmlns="http://www.w3.org/2000/svg"
@@ -377,7 +396,8 @@ export default function SchedulePage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white p-4 rounded-xl shadow-inner max-h-[800px] overflow-y-auto space-y-4">
+          /* Thêm class custom-scrollbar */
+          <div className="bg-white p-4 rounded-xl shadow-inner flex-1 overflow-y-auto space-y-4 custom-scrollbar">
             {moviesByTitle.length === 0 ? (
               <div className="flex flex-col items-center justify-center mt-10 text-center animate-fadeIn">
                 <Image
@@ -397,9 +417,6 @@ export default function SchedulePage() {
                 </p>
               </div>
             ) : (
-              // <p className="text-center text-gray-600 mt-10">
-              //   Không có suất chiếu
-              // </p>
               moviesByTitle.map((movie) => {
                 const sessionsByDate = movie.showtimes.reduce<
                   Record<string, Record<string, MovieShowtime[]>>
@@ -415,17 +432,18 @@ export default function SchedulePage() {
                 return (
                   <div
                     key={movie.title}
-                    className="flex flex-col sm:flex-row bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden p-4"
+                    className="flex flex-col sm:flex-row bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all p-4"
                   >
                     <Image
+                      onClick={() => goToDetail(movie.movie_id)}
                       src={movie.image_url}
                       alt={movie.title}
                       width={224}
                       height={288}
-                      className="w-full sm:w-56 h-72 object-cover rounded-2xl mb-3 sm:mb-0 sm:mr-6 shadow-md"
+                      className="w-full sm:w-56 h-72 object-cover rounded-2xl mb-3 sm:mb-0 sm:mr-6 shadow-md 
+               transition-transform duration-300 ease-in-out hover:scale-105 relative hover:z-10"
                       unoptimized={true}
                     />
-
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
                         <h3 className="font-semibold text-lg text-gray-800">
@@ -506,8 +524,8 @@ export default function SchedulePage() {
       {selectedShowtimeId && (
         <SeatSelectionModal
           showtimeId={selectedShowtimeId}
-          movieTitle={selectedMovieTitle || "Chọn ghế"}
-          showtime={selectedShowtimeLabel || "N/A"}
+          movieTitle={selectedMovieTitle}
+          showtime={selectedShowtimeLabel}
           onClose={() => setSelectedShowtimeId(null)}
         />
       )}

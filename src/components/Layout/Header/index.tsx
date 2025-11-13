@@ -113,29 +113,6 @@ const Header: React.FC = () => {
             </Link>
           </div>
           <div className="flex items-center gap-2 sm:gap-6">
-            <button
-              className="hover:cursor-pointer"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              <Icon
-                icon={"solar:sun-bold"}
-                width={32}
-                height={32}
-                className={`dark:hidden block ${
-                  isHomepage
-                    ? sticky
-                      ? "text-dark"
-                      : "text-white"
-                    : "text-dark"
-                }`}
-              />
-              <Icon
-                icon={"solar:moon-bold"}
-                width={32}
-                height={32}
-                className="dark:block hidden text-white"
-              />
-            </button>
             <div className={`hidden md:block`}>
               <Link
                 href="#"
@@ -148,7 +125,7 @@ const Header: React.FC = () => {
                 }`}
               >
                 <Icon icon={"ph:phone-bold"} width={24} height={24} />
-                +1-212-456-789
+                +84-369 880 798
               </Link>
             </div>
             <div>
