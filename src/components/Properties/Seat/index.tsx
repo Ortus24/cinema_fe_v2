@@ -176,32 +176,34 @@ export default function SeatSelectionModal({
         );
 
         const data = await booking.json();
-        alert(JSON.stringify(data, null, 2));
+        // alert(JSON.stringify(data, null, 2));
         console.log(data);
 
-        if (data.booking) {
-          const bookingId = Number(data.booking.id);
+        if (data.booking_id > 0) {
+          const bookingId = Number(data.booking_id);
           setBookingCode(bookingId);
+
+          console.log(bookingId);
 
           const response = await fetch(
             "https://cinema-booking-l32q.onrender.com/payos/create-payment",
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `${token}`,
+              },
               body: JSON.stringify({
-                orderId: 255555525434524,
-                // amount: totalPrice,
-                amount: 2000,
-                description: `Thanh toán các ghế : ${selectedSeats.join(", ")}`,
+                booking_id: bookingId,
               }),
             }
           );
 
           const result = await response.json();
-          // alert(JSON.stringify(result, null, 2));
 
           if (result.code === "00") {
             setPaymentData(result.data);
+            // alert(JSON.stringify(result, null, 2));
           } else {
             const response1 = await fetch(
               `https://cinema-booking-l32q.onrender.com/booking/${bookingId}`,
@@ -217,7 +219,7 @@ export default function SeatSelectionModal({
         }
       } catch (err) {
         console.error(err);
-        alert("Có lỗi xảy ra khi tạo thanh toán!");
+        // alert("Có lỗi xảy ra khi tạo thanh toán!");
         if (bookingOrder != -1) {
           await fetch(
             `https://cinema-booking-l32q.onrender.com/booking/${bookingOrder}`,
@@ -227,7 +229,7 @@ export default function SeatSelectionModal({
             }
           );
         }
-        alert("Tạo thanh toán thất bại!");
+        // alert("Tạo thanh toán thất bại!");
       } finally {
         setLoading(false);
       }
