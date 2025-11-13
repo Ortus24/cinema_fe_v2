@@ -40,6 +40,18 @@ type Showtime = {
   room: Room;
 };
 
+type MovieShowtime = {
+  showtime_id: number;
+  roomName: string;
+  timeStart: string;
+  timeEnd: string;
+  dateLabel: string;
+};
+
+type MovieSchedule = Movie & {
+  showtimes: MovieShowtime[];
+};
+
 type DateItem = {
   id: number;
   date: number;
@@ -56,8 +68,8 @@ type DateItem = {
 export default function SchedulePage() {
   const [showtimeData, setShowtimeData] = useState<Showtime[]>([]);
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
-  const [filteredTheaters, setFilteredTheaters] = useState<Cinema[]>([]);
-  const [selectedTheater, setSelectedTheater] = useState<number | null>(null);
+  const [filteredCinemas, setFilteredCinemas] = useState<Cinema[]>([]);
+  const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -110,53 +122,69 @@ export default function SchedulePage() {
    📡 Fetch API
   ======================= */
   useEffect(() => {
-    const fetchCinemas = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          "https://cinema-booking-l32q.onrender.com/cinema"
-        );
-        const data: Cinema[] = await res.json();
-        setCinemas(data);
-        setFilteredTheaters(data);
-        if (data.length > 0) setSelectedTheater(data[0].cinema_id);
+        const [cinemaRes, showtimeRes] = await Promise.all([
+          fetch("https://cinema-booking-l32q.onrender.com/cinema"),
+          fetch("https://cinema-booking-l32q.onrender.com/showtimes/current"),
+        ]);
+
+        if (cinemaRes.ok) {
+          const cinemaData: Cinema[] = await cinemaRes.json();
+          setCinemas(cinemaData);
+        } else {
+          console.error("Lỗi khi lấy danh sách rạp:", cinemaRes.statusText);
+        }
+
+        if (showtimeRes.ok) {
+          const showtimeData: Showtime[] = await showtimeRes.json();
+          setShowtimeData(showtimeData);
+        } else {
+          console.error("Lỗi khi lấy lịch chiếu:", showtimeRes.statusText);
+        }
       } catch (err) {
-        console.error("Lỗi khi lấy danh sách rạp:", err);
+        console.error("Đã xảy ra lỗi khi tải dữ liệu:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchShowtimes = async () => {
-      try {
-        const res = await fetch(
-          "https://cinema-booking-l32q.onrender.com/showtimes/current"
-        );
-        const data: Showtime[] = await res.json();
-        setShowtimeData(data);
-      } catch (err) {
-        console.error("Lỗi khi lấy lịch chiếu:", err);
-      }
-    };
-
-    fetchCinemas();
-    fetchShowtimes();
+    fetchData();
   }, []);
 
   /* =======================
-   🔍 Lọc rạp theo tìm kiếm
+   🔁 Đồng bộ danh sách phòng
   ======================= */
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredTheaters(cinemas);
-    } else {
-      setFilteredTheaters(
-        cinemas.filter((t) =>
-          t.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      );
+    if (!cinemas.length) {
+      setFilteredCinemas([]);
+      setSelectedCinemaId(null);
+      return;
     }
-  }, [searchQuery, cinemas]);
+
+    const keyword = searchQuery.trim().toLowerCase();
+    const nextList = keyword
+      ? cinemas.filter((cinema) =>
+          [cinema.name, cinema.address]
+            .join(" ")
+            .toLowerCase()
+            .includes(keyword)
+        )
+      : cinemas;
+
+    setFilteredCinemas(nextList);
+
+    if (!selectedCinemaId && nextList.length > 0) {
+      setSelectedCinemaId(nextList[0].cinema_id);
+    } else if (
+      selectedCinemaId &&
+      !nextList.some((cinema) => cinema.cinema_id === selectedCinemaId) &&
+      nextList.length > 0
+    ) {
+      setSelectedCinemaId(nextList[0].cinema_id);
+    }
+  }, [cinemas, searchQuery, selectedCinemaId]);
 
   /* =======================
   🎦 Lọc phim theo rạp + ngày
@@ -164,22 +192,45 @@ export default function SchedulePage() {
   const selectedApiDate = dates[selectedDate]?.apiDate;
 
   const filteredShowtimes = showtimeData.filter((item) => {
-    const matchTheater =
-      !selectedTheater || item.room.cinema.cinema_id === selectedTheater;
-    const matchDate =
-      selectedApiDate && item.start_time.startsWith(selectedApiDate);
-    return matchTheater && matchDate;
+    const matchCinema =
+      !selectedCinemaId || item.room.cinema.cinema_id === selectedCinemaId;
+
+    if (!selectedApiDate) return matchCinema;
+
+    if (item.start_time.includes(selectedApiDate)) {
+      return matchCinema;
+    }
+
+    const parsed = new Date(item.start_time);
+    if (!Number.isNaN(parsed.getTime())) {
+      const formatted = parsed
+        .toLocaleDateString("vi-VN")
+        .split("/")
+        .map((part) => part.padStart(2, "0"))
+        .join("/");
+      return matchCinema && formatted === selectedApiDate;
+    }
+
+    const [datePart] = item.start_time.split(" ");
+    if (datePart) {
+      return matchCinema && datePart === selectedApiDate;
+    }
+
+    return false;
   });
 
-  const moviesByTitle = Object.values(
-    filteredShowtimes.reduce((acc: any, item) => {
+  const moviesByTitle: MovieSchedule[] = Object.values(
+    filteredShowtimes.reduce<Record<string, MovieSchedule>>((acc, item) => {
       const title = item.movie.title;
-
       const [datePart, timePart] = item.start_time.split(" ");
+      if (!datePart || !timePart) return acc;
+
       const [day, month, year] = datePart.split("/");
+      if (!day || !month || !year) return acc;
+
       const isoString = `${year}-${month}-${day}T${timePart}`;
       const start = new Date(isoString);
-      if (isNaN(start.getTime())) return acc;
+      if (Number.isNaN(start.getTime())) return acc;
 
       const end = new Date(start.getTime() + item.movie.duration * 60000);
       const startTime = start.toLocaleTimeString("vi-VN", {
@@ -190,13 +241,22 @@ export default function SchedulePage() {
         hour: "2-digit",
         minute: "2-digit",
       });
+      const dateLabel = start.toLocaleDateString("vi-VN", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
 
-      if (!acc[title]) acc[title] = { ...item.movie, showtimes: [] };
+      if (!acc[title]) {
+        acc[title] = { ...item.movie, showtimes: [] as MovieShowtime[] };
+      }
       acc[title].showtimes.push({
         showtime_id: item.showtime_id,
         roomName: item.room.name,
         timeStart: startTime,
         timeEnd: endTime,
+        dateLabel,
       });
 
       return acc;
@@ -216,27 +276,41 @@ export default function SchedulePage() {
 
         <input
           type="text"
-          placeholder="🔍 Tìm rạp chiếu..."
+          placeholder="🔍 Tìm rạp hoặc địa chỉ..."
           className="w-full p-2 border rounded-lg mb-4"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
 
-        <div className="space-y-2 max-h-[70vh] overflow-y-auto">
-          {filteredTheaters.map((theater) => (
-            <div
-              key={theater.cinema_id}
-              onClick={() => setSelectedTheater(theater.cinema_id)}
-              className={`cursor-pointer p-3 rounded-lg border-l-4 transition-all ${
-                selectedTheater === theater.cinema_id
-                  ? "bg-pink-50 border-pink-500 font-semibold text-pink-700"
-                  : "border-transparent hover:bg-gray-50"
-              }`}
-            >
-              <span className="font-medium">{theater.name}</span>
-              <span className="text-xs text-gray-500">{theater.address}</span>
+        <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+          {filteredCinemas.length === 0 ? (
+            <div className="text-sm text-gray-500 text-center py-6">
+              Không tìm thấy rạp phù hợp.
             </div>
-          ))}
+          ) : (
+            filteredCinemas.map((cinema) => (
+              <button
+                type="button"
+                key={cinema.cinema_id}
+                onClick={() => {
+                  setSelectedCinemaId(cinema.cinema_id);
+                  setSelectedDate(0); // reset về hôm nay
+                }}
+                className={`w-full text-left p-3 rounded-lg border-l-4 transition-all ${
+                  selectedCinemaId === cinema.cinema_id
+                    ? "bg-pink-50 border-pink-500 font-semibold text-pink-700 shadow-sm"
+                    : "border-transparent hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex flex-col">
+                  <span>{cinema.name}</span>
+                  <span className="text-xs text-gray-500">
+                    {cinema.address}
+                  </span>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
 
@@ -245,6 +319,23 @@ export default function SchedulePage() {
         <h1 className="text-2xl font-bold text-pink-600 mb-4 text-center">
           📅 Lịch chiếu phim
         </h1>
+
+        {selectedCinemaId && (
+          <div className="text-center text-sm text-gray-500 mb-6 space-y-1">
+            <p className="font-medium text-gray-700">
+              {
+                cinemas.find((cinema) => cinema.cinema_id === selectedCinemaId)
+                  ?.name
+              }
+            </p>
+            <p>
+              {
+                cinemas.find((cinema) => cinema.cinema_id === selectedCinemaId)
+                  ?.address
+              }
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-2 overflow-x-auto justify-center mb-5">
           {dates.map((d) => (
@@ -309,15 +400,17 @@ export default function SchedulePage() {
               // <p className="text-center text-gray-600 mt-10">
               //   Không có suất chiếu
               // </p>
-              moviesByTitle.map((movie: any) => {
-                const showtimesByRoom = movie.showtimes.reduce(
-                  (acc: any, show: any) => {
-                    if (!acc[show.roomName]) acc[show.roomName] = [];
-                    acc[show.roomName].push(show);
-                    return acc;
-                  },
-                  {}
-                );
+              moviesByTitle.map((movie) => {
+                const sessionsByDate = movie.showtimes.reduce<
+                  Record<string, Record<string, MovieShowtime[]>>
+                >((acc, show) => {
+                  if (!acc[show.dateLabel]) acc[show.dateLabel] = {};
+                  if (!acc[show.dateLabel][show.roomName]) {
+                    acc[show.dateLabel][show.roomName] = [];
+                  }
+                  acc[show.dateLabel][show.roomName].push(show);
+                  return acc;
+                }, {});
 
                 return (
                   <div
@@ -346,32 +439,61 @@ export default function SchedulePage() {
                         </p>
                       </div>
 
-                      {Object.entries(showtimesByRoom).map(
-                        ([roomName, shows]: any) => (
-                          <div key={roomName} className="mt-4">
-                            <div className="font-medium text-gray-700 mb-2">
-                              2D Phụ đề | {roomName}
+                      <div className="mt-4 space-y-3">
+                        {Object.entries(sessionsByDate).map(
+                          ([dateLabel, sessionsByRoom]) => (
+                            <div
+                              key={dateLabel}
+                              className="rounded-lg bg-gray-50 p-3"
+                            >
+                              <div className="text-sm font-medium text-gray-700 mb-2">
+                                {dateLabel}
+                              </div>
+                              <div className="space-y-2">
+                                {Object.entries(sessionsByRoom).map(
+                                  ([roomName, sessions]) => (
+                                    <div
+                                      key={`${dateLabel}-${roomName}`}
+                                      className="rounded-lg border border-dashed border-blue-200 bg-white/80 p-3"
+                                    >
+                                      <div className="text-xs font-semibold uppercase text-blue-600 mb-2">
+                                        {roomName}
+                                      </div>
+                                      <div className="flex flex-wrap gap-2">
+                                        {sessions
+                                          .sort((a, b) =>
+                                            a.timeStart.localeCompare(
+                                              b.timeStart
+                                            )
+                                          )
+                                          .map((show) => (
+                                            <button
+                                              key={show.showtime_id}
+                                              onClick={() => {
+                                                setSelectedShowtimeId(
+                                                  show.showtime_id
+                                                );
+                                                setSelectedShowtimeLabel(
+                                                  `${show.timeStart} ~ ${show.timeEnd}`
+                                                );
+                                                setSelectedMovieTitle(
+                                                  movie.title
+                                                );
+                                              }}
+                                              className="px-4 py-1 border border-blue-400 text-blue-600 rounded-lg text-sm hover:bg-blue-50 transition"
+                                            >
+                                              {show.timeStart} ~ {show.timeEnd}
+                                            </button>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  )
+                                )}
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              {shows.map((show: any, idx: number) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => {
-                                    setSelectedShowtimeId(show.showtime_id);
-                                    setSelectedShowtimeLabel(
-                                      `${show.timeStart} ~ ${show.timeEnd}`
-                                    );
-                                    setSelectedMovieTitle(movie.title);
-                                  }}
-                                  className="px-4 py-1 border border-blue-400 text-blue-600 rounded-lg text-sm hover:bg-blue-50"
-                                >
-                                  {show.timeStart} ~ {show.timeEnd}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      )}
+                          )
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

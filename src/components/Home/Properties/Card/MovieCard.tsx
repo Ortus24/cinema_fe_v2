@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 export interface Movie {
+  movie_id?: number;
+  id?: number;
   title: string;
   duration: number;
   genre: string;
@@ -22,21 +24,33 @@ const MovieCard: React.FC<{ movie: Movie }> = ({ movie }) => {
     description,
     image_url,
   } = movie;
+  const movieId = movie.movie_id ?? movie.id;
 
   return (
     <div className="relative rounded-2xl border border-dark/10 dark:border-white/10 group hover:shadow-2xl duration-300 dark:hover:shadow-white/20">
       {/* Poster */}
       <div className="overflow-hidden rounded-t-2xl">
-        <Link href="#">
+        {movieId ? (
+          <Link href={`/movie?movieId=${movieId}`} aria-label={`Xem chi tiết ${title}`}>
+            <Image
+              src={image_url}
+              alt={title}
+              width={440}
+              height={300}
+              className="w-full h-[250px] object-cover rounded-t-2xl group-hover:brightness-75 group-hover:scale-110 transition duration-300"
+              unoptimized
+            />
+          </Link>
+        ) : (
           <Image
             src={image_url}
             alt={title}
             width={440}
             height={300}
-            className="w-full h-[250px] object-cover rounded-t-2xl group-hover:brightness-75 group-hover:scale-110 transition duration-300"
+            className="w-full h-[250px] object-cover rounded-t-2xl"
             unoptimized
           />
-        </Link>
+        )}
         <div className="absolute top-6 right-6 p-3 bg-white rounded-full hidden group-hover:block">
           <Icon
             icon="solar:arrow-right-linear"
@@ -48,7 +62,7 @@ const MovieCard: React.FC<{ movie: Movie }> = ({ movie }) => {
       </div>
 
       {/* Nội dung */}
-      <div className="p-5 flex flex-col gap-3 w-[480px]">
+      <div className="p-5 flex flex-col gap-3 w-full">
         <h3 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition truncate">
           {title}
         </h3>

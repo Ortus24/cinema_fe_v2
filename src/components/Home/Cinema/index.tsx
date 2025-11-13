@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import MovieCard from "../Properties/Card/MovieCard";
 
 interface Movie {
+  movie_id?: number;
+  id?: number;
   title: string;
   duration: number;
   genre: string;
