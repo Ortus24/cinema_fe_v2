@@ -47,17 +47,19 @@ type Showtime = {
   cinema_id?: number;
 };
 
-type RoomOption = {
-  room_id: number;
-  roomName: string;
-  cinema_id: number;
-  cinemaName: string;
-  cinemaAddress: string;
-};
+// Ghi chú: Kiểu RoomOption không còn được sử dụng cho sidebar trái
+// type RoomOption = {
+//   room_id: number;
+//   roomName: string;
+//   cinema_id: number;
+//   cinemaName: string;
+//   cinemaAddress: string;
+// };
 
 type RoomSchedule = {
   room_id: number;
   roomName: string;
+  cinema_id: number; // Đã thêm cinema_id để lọc
   cinemaName: string;
   cinemaAddress: string;
   sessions: Record<
@@ -73,6 +75,7 @@ type RoomSchedule = {
 type GroupedShowtimes = {
   room_id: number;
   roomName: string;
+  cinema_id: number; // Đã thêm cinema_id để lọc
   cinemaName: string;
   cinemaAddress: string;
   sessions: {
@@ -80,6 +83,14 @@ type GroupedShowtimes = {
     apiDate: string;
     timeSlots: string[];
   }[];
+};
+
+type ModalInfo = {
+  roomName: string;
+  cinemaName: string;
+  cinemaAddress: string;
+  dateLabel: string;
+  time: string;
 };
 
 // Component HeroSub thay thế (vì import gốc bị lỗi)
@@ -124,10 +135,15 @@ export default function MovieDetail() {
   const [showtimesLoading, setShowtimesLoading] = useState(false);
   const [showtimesError, setShowtimesError] = useState<string | null>(null);
   const [cinemaMap, setCinemaMap] = useState<Record<number, Cinema>>({});
-  const [rooms, setRooms] = useState<RoomOption[]>([]);
-  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+
+  // --- THAY ĐỔI: State cho danh sách rạp và rạp đang chọn ---
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
+  // --- (Xoá state `rooms` và `selectedRoomId`) ---
+
   const [selectedDateIndex, setSelectedDateIndex] = useState<number>(0);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [modalInfo, setModalInfo] = useState<ModalInfo | null>(null);
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -253,23 +269,36 @@ export default function MovieDetail() {
         const res = await fetch(
           "https://cinema-booking-l32q.onrender.com/cinema",
           {
-            cache: "force-cache",
+            cache: "force-cache", // Sử dụng cache để tải danh sách rạp nhanh hơn
           }
         );
         if (!res.ok) return;
         const data: Cinema[] = await res.json();
+
+        // 1. Tạo Map để tra cứu nhanh (như cũ)
         const map = data.reduce<Record<number, Cinema>>((acc, item) => {
           acc[item.cinema_id] = item;
           return acc;
         }, {});
         setCinemaMap(map);
+
+        // 2. THAY ĐỔI: Lưu danh sách rạp đã sắp xếp vào state
+        const cinemaList = data.sort((a, b) =>
+          a.name.localeCompare(b.name, "vi")
+        );
+        setCinemas(cinemaList);
+
+        // 3. THAY ĐỔI: Tự động chọn rạp đầu tiên trong danh sách
+        if (cinemaList.length > 0) {
+          setSelectedCinemaId(cinemaList[0].cinema_id);
+        }
       } catch (err) {
         console.error("Failed to fetch cinemas:", err);
       }
     };
 
     fetchCinemas();
-  }, []);
+  }, []); // Chỉ chạy một lần
 
   useEffect(() => {
     const fetchShowtimes = async () => {
@@ -289,12 +318,6 @@ export default function MovieDetail() {
       setShowtimesError(null);
 
       try {
-        // -----------------------------------------------------------------
-        // SỬA Ở ĐÂY:
-        // Đã thay đổi URL từ `http://localhost:3001/showtimes...`
-        // sang API route nội bộ của Next.js: `/api/showtimes...`
-        // (Giữ nguyên từ lần sửa trước, phần này đã đúng)
-        // -----------------------------------------------------------------
         const res = await fetch(
           `https://cinema-booking-l32q.onrender.com/showtimes?movie=${numericId}`,
           {
@@ -356,67 +379,18 @@ export default function MovieDetail() {
     });
   }, []);
 
-  useEffect(() => {
-    if (!showtimes.length) {
-      setRooms([]);
-      setSelectedRoomId(null);
-      return;
-    }
+  // --- (useEffect [showtimes, cinemaMap] để setRooms đã bị xoá) ---
 
-    const roomMap = new Map<number, RoomOption>();
-
-    showtimes.forEach((showtime) => {
-      const cinemaId =
-        showtime.room?.cinema?.cinema_id ?? showtime.cinema_id ?? null;
-      const cinemaInfo = cinemaId ? cinemaMap[cinemaId] : undefined;
-
-      const roomId = showtime.room?.room_id ?? showtime.room_id;
-      const roomName =
-        showtime.room?.name ||
-        (showtime as unknown as { room_name?: string })?.room_name ||
-        `Phòng ${roomId ?? showtime.showtime_id}`;
-
-      if (!roomId || roomMap.has(roomId)) return;
-
-      roomMap.set(roomId, {
-        room_id: roomId,
-        roomName,
-        cinema_id: cinemaId ?? -1,
-        cinemaName: cinemaInfo?.name ?? "Rạp không xác định",
-        cinemaAddress:
-          cinemaInfo?.address ??
-          (showtime as unknown as { cinema_address?: string })
-            ?.cinema_address ??
-          "Đang cập nhật",
-      });
-    });
-
-    const roomList = Array.from(roomMap.values()).sort((a, b) => {
-      if (a.cinemaName !== b.cinemaName) {
-        return a.cinemaName.localeCompare(b.cinemaName, "vi");
-      }
-      return a.roomName.localeCompare(b.roomName, "vi");
-    });
-
-    setRooms(roomList);
-
-    setSelectedRoomId((prev) => {
-      if (prev && roomList.some((room) => room.room_id === prev)) {
-        return prev;
-      }
-      return roomList.length > 0 ? roomList[0].room_id : null;
-    });
-  }, [showtimes, cinemaMap]);
-
-  const filteredRooms = useMemo(() => {
+  // --- THAY ĐỔI: Lọc danh sách RẠP (thay vì phòng) ---
+  const filteredCinemas = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase();
-    if (!keyword) return rooms;
-    return rooms.filter(
-      (room) =>
-        room.roomName.toLowerCase().includes(keyword) ||
-        room.cinemaName.toLowerCase().includes(keyword)
+    if (!keyword) return cinemas;
+    return cinemas.filter(
+      (cinema) =>
+        cinema.name.toLowerCase().includes(keyword) ||
+        cinema.address.toLowerCase().includes(keyword)
     );
-  }, [rooms, searchKeyword]);
+  }, [cinemas, searchKeyword]);
 
   const roomSchedules = useMemo(() => {
     if (!showtimes.length) return [];
@@ -500,6 +474,7 @@ export default function MovieDetail() {
         map.set(roomId, {
           room_id: roomId,
           roomName,
+          cinema_id: cinemaId ?? -1, // THAY ĐỔI: Thêm cinema_id
           cinemaName: cinemaInfo?.name ?? "Rạp không xác định",
           cinemaAddress:
             cinemaInfo?.address ??
@@ -532,6 +507,7 @@ export default function MovieDetail() {
     return Array.from(map.values()).map<GroupedShowtimes>((item) => ({
       room_id: item.room_id,
       roomName: item.roomName,
+      cinema_id: item.cinema_id, // THAY ĐỔI: Truyền cinema_id
       cinemaName: item.cinemaName,
       cinemaAddress: item.cinemaAddress,
       sessions: Object.entries(item.sessions)
@@ -549,23 +525,28 @@ export default function MovieDetail() {
 
     const selectedDateValue = dateTabs[selectedDateIndex]?.value;
 
-    return roomSchedules
-      .filter((room) =>
-        selectedRoomId ? room.room_id === selectedRoomId : true
-      )
-      .map((room) => {
-        const sessions = room.sessions.filter((session) => {
-          if (!selectedDateValue) return true;
-          return session.apiDate === selectedDateValue;
-        });
+    return (
+      roomSchedules
+        // THAY ĐỔI: Lọc theo rạp đã chọn (selectedCinemaId) thay vì phòng (selectedRoomId)
+        .filter((room) =>
+          selectedCinemaId ? room.cinema_id === selectedCinemaId : true
+        )
+        .map((room) => {
+          // Lọc session (suất chiếu) theo ngày đã chọn
+          const sessions = room.sessions.filter((session) => {
+            if (!selectedDateValue) return true;
+            return session.apiDate === selectedDateValue;
+          });
 
-        return {
-          ...room,
-          sessions,
-        };
-      })
-      .filter((room) => room.sessions.length > 0);
-  }, [roomSchedules, selectedRoomId, selectedDateIndex, dateTabs]);
+          return {
+            ...room,
+            sessions,
+          };
+        })
+        // Lọc ra các phòng không có suất chiếu vào ngày đã chọn
+        .filter((room) => room.sessions.length > 0)
+    );
+  }, [roomSchedules, selectedCinemaId, selectedDateIndex, dateTabs]); // Phụ thuộc vào selectedCinemaId
 
   return (
     <>
@@ -771,52 +752,63 @@ export default function MovieDetail() {
                   </div>
                 )}
 
+                {/* --- THAY ĐỔI: Cập nhật điều kiện kiểm tra --- */}
                 {!showtimesLoading &&
                   !showtimesError &&
-                  filteredSchedule.length === 0 && (
+                  showtimes.length > 0 && // Kiểm tra xem có showtimes không
+                  filteredSchedule.length === 0 && ( // MỚI: và lịch chiếu đã lọc rỗng
                     <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                      Hiện chưa có lịch chiếu cho ngày này. Vui lòng chọn ngày
-                      khác.
+                      Hiện chưa có lịch chiếu cho rạp này vào ngày đã chọn. Vui
+                      lòng chọn rạp hoặc ngày khác.
                     </div>
                   )}
 
+                {!showtimesLoading &&
+                  !showtimesError &&
+                  showtimes.length === 0 && ( // MỚI: Nếu không có showtimes nào
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                      Phim này hiện chưa có lịch chiếu.
+                    </div>
+                  )}
+
+                {/* --- THAY ĐỔI: Cột trái (Sidebar Rạp) --- */}
                 <div className="flex flex-col gap-4 md:flex-row md:gap-6">
                   <div className="md:w-1/3 space-y-3">
                     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 shadow-sm">
                       <h5 className="text-sm font-semibold text-gray-700 mb-3">
-                        Phòng chiếu
+                        Rạp chiếu
                       </h5>
                       <input
                         type="text"
                         value={searchKeyword}
                         onChange={(e) => setSearchKeyword(e.target.value)}
-                        placeholder="Tìm phòng hoặc rạp..."
+                        placeholder="Tìm rạp hoặc địa chỉ..."
                         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
                       />
                     </div>
 
                     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm max-h-[320px] overflow-y-auto space-y-2">
-                      {filteredRooms.length === 0 ? (
+                      {filteredCinemas.length === 0 ? (
                         <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                          Không tìm thấy phòng phù hợp.
+                          Không tìm thấy rạp phù hợp.
                         </div>
                       ) : (
-                        filteredRooms.map((room) => (
+                        // Lặp qua danh sách rạp đã lọc
+                        filteredCinemas.map((cinema) => (
                           <button
-                            key={room.room_id}
-                            onClick={() => setSelectedRoomId(room.room_id)}
+                            key={cinema.cinema_id}
+                            onClick={() =>
+                              setSelectedCinemaId(cinema.cinema_id)
+                            }
                             className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
-                              selectedRoomId === room.room_id
+                              selectedCinemaId === cinema.cinema_id
                                 ? "border-pink-400 bg-pink-50 text-pink-600 shadow"
                                 : "border-transparent hover:bg-gray-50"
                             }`}
                           >
-                            <div className="font-medium">{room.roomName}</div>
+                            <div className="font-medium">{cinema.name}</div>
                             <div className="text-xs text-gray-500">
-                              {room.cinemaName}
-                            </div>
-                            <div className="text-[11px] text-gray-400">
-                              {room.cinemaAddress}
+                              {cinema.address}
                             </div>
                           </button>
                         ))
@@ -824,6 +816,7 @@ export default function MovieDetail() {
                     </div>
                   </div>
 
+                  {/* --- Cột phải (Lịch chiếu) --- */}
                   <div className="flex-1 space-y-4">
                     <div className="flex gap-2 overflow-x-auto pb-1">
                       {dateTabs.map((tab) => (
@@ -841,6 +834,7 @@ export default function MovieDetail() {
                       ))}
                     </div>
 
+                    {/* Vòng lặp này bây giờ hiển thị TẤT CẢ các phòng cho RẠP đã chọn */}
                     <div className="space-y-4">
                       {filteredSchedule.map((room) => (
                         <div
@@ -852,6 +846,7 @@ export default function MovieDetail() {
                               <h5 className="text-base font-semibold text-gray-800">
                                 {room.roomName}
                               </h5>
+                              {/* Tên rạp vẫn được hiển thị, hữu ích nếu không có rạp nào được chọn */}
                               <p className="text-sm text-gray-500">
                                 {room.cinemaName}
                               </p>
@@ -864,7 +859,7 @@ export default function MovieDetail() {
                           <div className="mt-4 space-y-3">
                             {room.sessions.map((session) => (
                               <div
-                                key={session.dateLabel}
+                                key={session.dateLabel} // dateLabel là duy nhất trong ngữ cảnh này
                                 className="rounded-lg bg-white px-4 py-3 shadow-sm"
                               >
                                 <div className="text-sm font-medium text-gray-700">
@@ -872,12 +867,21 @@ export default function MovieDetail() {
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   {session.timeSlots.map((time) => (
-                                    <span
-                                      key={`${session.dateLabel}-${time}`}
-                                      className="rounded-lg border border-pink-200 bg-pink-50 px-3 py-1 text-sm font-medium text-pink-600"
+                                    <button
+                                      key={`${session.dateLabel}-${time}`} // Đảm bảo key là duy nhất
+                                      className="rounded-lg border border-pink-200 bg-pink-50 px-3 py-1 text-sm font-medium text-pink-600 transition hover:bg-pink-100 hover:border-pink-300 cursor-pointer"
+                                      onClick={() =>
+                                        setModalInfo({
+                                          roomName: room.roomName,
+                                          cinemaName: room.cinemaName,
+                                          cinemaAddress: room.cinemaAddress,
+                                          dateLabel: session.dateLabel,
+                                          time: time,
+                                        })
+                                      }
                                     >
                                       {time}
-                                    </span>
+                                    </button>
                                   ))}
                                 </div>
                               </div>
@@ -893,6 +897,85 @@ export default function MovieDetail() {
           </>
         )}
       </div>
+
+      {/* --- THÊM MỚI: Modal Hiển thị thông tin --- */}
+      {modalInfo && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setModalInfo(null)} // Bấm vào nền để đóng
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative"
+            onClick={(e) => e.stopPropagation()} // Ngăn bấm vào modal đóng modal
+          >
+            <button
+              onClick={() => setModalInfo(null)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+              aria-label="Đóng"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <h4 className="text-xl font-semibold text-pink-600 mb-5">
+              Thông tin Suất chiếu
+            </h4>
+
+            <div className="space-y-2 text-gray-700">
+              <p>
+                <span className="font-medium text-gray-500 w-20 inline-block">
+                  Phòng:
+                </span>{" "}
+                <span className="font-semibold">{modalInfo.roomName}</span>
+              </p>
+              <p>
+                <span className="font-medium text-gray-500 w-20 inline-block">
+                  Rạp:
+                </span>{" "}
+                {modalInfo.cinemaName}
+              </p>
+              <p>
+                <span className="font-medium text-gray-500 w-20 inline-block">
+                  Địa chỉ:
+                </span>{" "}
+                {modalInfo.cinemaAddress}
+              </p>
+              <hr className="my-3" />
+              <p>
+                <span className="font-medium text-gray-500 w-20 inline-block">
+                  Ngày:
+                </span>{" "}
+                {modalInfo.dateLabel}
+              </p>
+              <p>
+                <span className="font-medium text-gray-500 w-20 inline-block">
+                  Giờ:
+                </span>{" "}
+                <span className="text-lg font-bold text-pink-600">
+                  {modalInfo.time}
+                </span>
+              </p>
+            </div>
+
+            <button className="mt-6 w-full bg-pink-600 text-white font-medium py-3 rounded-lg hover:bg-pink-700 transition">
+              Tiếp tục Đặt vé
+            </button>
+          </div>
+        </div>
+      )}
+      {/* --- Hết Modal --- */}
     </>
   );
 }
