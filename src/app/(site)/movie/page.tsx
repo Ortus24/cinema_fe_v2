@@ -56,6 +56,12 @@ type Showtime = {
 //   cinemaAddress: string;
 // };
 
+// --- THAY ĐỔI: Định nghĩa kiểu cho một suất chiếu ---
+type TimeSlotInfo = {
+  time: string;
+  showtimeId: number;
+};
+
 type RoomSchedule = {
   room_id: number;
   roomName: string;
@@ -67,7 +73,7 @@ type RoomSchedule = {
     {
       dateLabel: string;
       apiDate: string;
-      timeSlots: string[];
+      timeSlots: TimeSlotInfo[]; // <-- THAY ĐỔI: Dùng TimeSlotInfo
     }
   >;
 };
@@ -81,7 +87,7 @@ type GroupedShowtimes = {
   sessions: {
     dateLabel: string;
     apiDate: string;
-    timeSlots: string[];
+    timeSlots: TimeSlotInfo[]; // <-- THAY ĐỔI: Dùng TimeSlotInfo
   }[];
 };
 
@@ -91,6 +97,7 @@ type ModalInfo = {
   cinemaAddress: string;
   dateLabel: string;
   time: string;
+  showtimeId: number; // <-- THÊM MỚI
 };
 
 // Component HeroSub thay thế (vì import gốc bị lỗi)
@@ -319,7 +326,7 @@ export default function MovieDetail() {
 
       try {
         const res = await fetch(
-          `https://cinema-booking-l32q.onrender.com/showtimes?movie=${numericId}`,
+          `https://cinema-booking-l32q.onrender.com/showtimes/movie?movie=${numericId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -501,7 +508,11 @@ export default function MovieDetail() {
         };
       }
 
-      roomEntry.sessions[sessionKey].timeSlots.push(timeLabel);
+      // --- THAY ĐỔI: Lưu object thay vì string ---
+      roomEntry.sessions[sessionKey].timeSlots.push({
+        time: timeLabel,
+        showtimeId: showtime.showtime_id,
+      });
     });
 
     return Array.from(map.values()).map<GroupedShowtimes>((item) => ({
@@ -515,7 +526,10 @@ export default function MovieDetail() {
         .map(([apiDate, session]) => ({
           apiDate,
           dateLabel: session.dateLabel,
-          timeSlots: session.timeSlots.sort((a, b) => a.localeCompare(b, "vi")),
+          // --- THAY ĐỔI: Sắp xếp theo thuộc tính 'time' ---
+          timeSlots: session.timeSlots.sort((a, b) =>
+            a.time.localeCompare(b.time, "vi")
+          ),
         })),
     }));
   }, [showtimes, cinemaMap]);
@@ -866,9 +880,10 @@ export default function MovieDetail() {
                                   {session.dateLabel}
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                  {session.timeSlots.map((time) => (
+                                  {/* --- THAY ĐỔI: Lặp qua slot object --- */}
+                                  {session.timeSlots.map((slot) => (
                                     <button
-                                      key={`${session.dateLabel}-${time}`} // Đảm bảo key là duy nhất
+                                      key={slot.showtimeId} // Đảm bảo key là duy nhất
                                       className="rounded-lg border border-pink-200 bg-pink-50 px-3 py-1 text-sm font-medium text-pink-600 transition hover:bg-pink-100 hover:border-pink-300 cursor-pointer"
                                       onClick={() =>
                                         setModalInfo({
@@ -876,11 +891,12 @@ export default function MovieDetail() {
                                           cinemaName: room.cinemaName,
                                           cinemaAddress: room.cinemaAddress,
                                           dateLabel: session.dateLabel,
-                                          time: time,
+                                          time: slot.time,
+                                          showtimeId: slot.showtimeId, // <-- ĐÃ THÊM
                                         })
                                       }
                                     >
-                                      {time}
+                                      {slot.time}
                                     </button>
                                   ))}
                                 </div>
@@ -965,6 +981,15 @@ export default function MovieDetail() {
                 </span>{" "}
                 <span className="text-lg font-bold text-pink-600">
                   {modalInfo.time}
+                </span>
+              </p>
+              {/* --- THÊM MỚI: Hiển thị Showtime ID --- */}
+              <p>
+                <span className="font-medium text-gray-500 w-20 inline-block">
+                  Mã suất:
+                </span>{" "}
+                <span className="text-sm font-mono text-gray-600">
+                  {modalInfo.showtimeId}
                 </span>
               </p>
             </div>
