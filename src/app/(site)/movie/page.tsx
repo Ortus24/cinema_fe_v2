@@ -1,8 +1,9 @@
 "use client";
 
-import HeroSub from "@/components/shared/HeroSub";
-import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+// Đã xoá các import của Next.js và path alias không được hỗ trợ
+// import HeroSub from "@/components/shared/HeroSub";
+// import Image from "next/image";
+// import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 type MovieDetail = {
@@ -81,9 +82,40 @@ type GroupedShowtimes = {
   }[];
 };
 
+// Component HeroSub thay thế (vì import gốc bị lỗi)
+const HeroSub = ({
+  title,
+  description,
+  badge,
+}: {
+  title: string;
+  description: string;
+  badge: string;
+}) => (
+  <header className="bg-gray-100 py-12">
+    <div className="max-w-6xl mx-auto px-6">
+      <span className="text-sm font-semibold text-pink-600 bg-pink-100 px-3 py-1 rounded-full">
+        {badge}
+      </span>
+      <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mt-2">
+        {title}
+      </h1>
+      <p className="text-gray-600 mt-2">{description}</p>
+    </div>
+  </header>
+);
+
 export default function MovieDetail() {
-  const searchParams = useSearchParams();
-  const movieId = searchParams.get("movieId");
+  // Thay thế `useSearchParams` bằng cách đọc `window.location.search`
+  const [movieId, setMovieId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Logic này chỉ chạy trên client-side sau khi component được mount
+    // Nó đọc `movieId` từ URL query string.
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("movieId");
+    setMovieId(id);
+  }, []); // Mảng rỗng đảm bảo nó chỉ chạy một lần khi mount
 
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -185,6 +217,8 @@ export default function MovieDetail() {
       }
     };
 
+    // useEffect này sẽ tự động chạy lại khi `movieId` thay đổi
+    // (từ null sang giá trị được đọc từ URL)
     fetchMovie();
   }, [movieId]);
 
@@ -255,8 +289,14 @@ export default function MovieDetail() {
       setShowtimesError(null);
 
       try {
+        // -----------------------------------------------------------------
+        // SỬA Ở ĐÂY:
+        // Đã thay đổi URL từ `http://localhost:3001/showtimes...`
+        // sang API route nội bộ của Next.js: `/api/showtimes...`
+        // (Giữ nguyên từ lần sửa trước, phần này đã đúng)
+        // -----------------------------------------------------------------
         const res = await fetch(
-          `http://localhost:3001/showtimes/movie?movie=${numericId}`,
+          `https://cinema-booking-l32q.onrender.com/showtimes?movie=${numericId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -529,6 +569,7 @@ export default function MovieDetail() {
 
   return (
     <>
+      {/* Đã thay thế <HeroSub> bằng component nội bộ */}
       <HeroSub title={heroTitle} description={heroDescription} badge="Movies" />
       <div className="max-w-6xl mx-auto p-6 space-y-8">
         {!movieId && (
@@ -566,24 +607,30 @@ export default function MovieDetail() {
                   <div className="absolute inset-0 bg-black/45 z-10"></div>
                 </>
               ) : (
-                <Image
+                // Đã thay thế <Image> bằng <img>
+                <img
                   src={movie.image_url}
                   alt={movie.title}
-                  fill
-                  className="object-cover"
-                  sizes="100vw"
-                  unoptimized
+                  className="absolute inset-0 w-full h-full object-cover"
+                  // Thêm fallback
+                  onError={(e) =>
+                    (e.currentTarget.src =
+                      "https://placehold.co/1200x550/e2e8f0/64748b?text=Image+Not+Found")
+                  }
                 />
               )}
               <div className="absolute bottom-6 left-4 md:left-12 flex items-end gap-6 z-20">
                 <div className="relative w-24 h-36 md:w-56 md:h-72 rounded-xl overflow-hidden shadow-2xl border-2 border-white/80">
-                  <Image
+                  {/* Đã thay thế <Image> bằng <img> */}
+                  <img
                     src={movie.image_url}
                     alt={movie.title}
-                    fill
-                    className="object-cover"
-                    sizes="280px"
-                    unoptimized
+                    className="absolute inset-0 w-full h-full object-cover"
+                    // Thêm fallback
+                    onError={(e) =>
+                      (e.currentTarget.src =
+                        "https://placehold.co/224x288/e2e8f0/64748b?text=Poster")
+                    }
                   />
                 </div>
                 <div className="max-w-xl space-y-2 rounded-xl bg-black/40 px-4 py-3 text-white shadow-lg backdrop-blur-sm border border-white/10">
