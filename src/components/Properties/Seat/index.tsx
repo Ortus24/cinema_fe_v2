@@ -40,6 +40,7 @@ export default function SeatSelectionModal({
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [bookingCode, setBookingCode] = useState<number>(-1);
+  const [bookingOrder, setBookingOrder] = useState<number>(-1);
 
   const totalPrice = useMemo(() => {
     return seats
@@ -148,7 +149,6 @@ export default function SeatSelectionModal({
 
   const handlePayment = async () => {
     if (token) {
-      let bookingOrder = -1;
       try {
         setLoading(true);
         // Tạo orderId ngẫu nhiên, có thể dùng nhiều lần trong 1 giờ (ví dụ: timestamp + random)

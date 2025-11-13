@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import SeatSelectionModal from "../Seat";
 
@@ -285,13 +286,16 @@ export default function SchedulePage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white p-4 rounded-xl shadow-inner max-h-[800px] overflow-y-auto">
+          <div className="bg-white p-4 rounded-xl shadow-inner max-h-[800px] overflow-y-auto space-y-4">
             {moviesByTitle.length === 0 ? (
               <div className="flex flex-col items-center justify-center mt-10 text-center animate-fadeIn">
-                <img
+                <Image
                   src="https://cinema-minio.onrender.com/cinema-bucket/image/5e2aedef-0d08-4d45-bbbd-27f542a1f516-4076549.png"
                   alt="No movies"
-                  className="w-40 h-40 mb-4 opacity-80"
+                  width={160}
+                  height={160}
+                  className="mb-4 opacity-80"
+                  unoptimized={true}
                 />
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">
                   Oops! Không có suất chiếu nào trong ngày này 🎬
@@ -320,10 +324,13 @@ export default function SchedulePage() {
                     key={movie.title}
                     className="flex flex-col sm:flex-row bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden p-4"
                   >
-                    <img
+                    <Image
                       src={movie.image_url}
                       alt={movie.title}
+                      width={224}
+                      height={288}
                       className="w-full sm:w-56 h-72 object-cover rounded-2xl mb-3 sm:mb-0 sm:mr-6 shadow-md"
+                      unoptimized={true}
                     />
 
                     <div className="flex-1 flex flex-col justify-between">
