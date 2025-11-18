@@ -228,14 +228,7 @@ export default function SchedulePage() {
   const moviesByTitle: MovieSchedule[] = Object.values(
     filteredShowtimes.reduce<Record<string, MovieSchedule>>((acc, item) => {
       const title = item.movie.title;
-      const [datePart, timePart] = item.start_time.split(" ");
-      if (!datePart || !timePart) return acc;
-
-      const [day, month, year] = datePart.split("/");
-      if (!day || !month || !year) return acc;
-
-      const isoString = `${year}-${month}-${day}T${timePart}`;
-      const start = new Date(isoString);
+      const start = new Date(item.start_time);
       if (Number.isNaN(start.getTime())) return acc;
 
       const end = new Date(start.getTime() + item.movie.duration * 60000);
