@@ -27,6 +27,7 @@ export default function InfoPage() {
               method: "DELETE",
               headers: {
                 "Content-Type": "application/json",
+                Authorization: `${localStorage.getItem("token")}`,
               },
             }
           );
