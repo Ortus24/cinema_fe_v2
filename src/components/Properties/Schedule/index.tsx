@@ -73,7 +73,7 @@ export default function SchedulePage() {
   const [selectedCinemaId, setSelectedCinemaId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(
     null
   );
@@ -129,7 +129,6 @@ export default function SchedulePage() {
   ======================= */
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
         const [cinemaRes, showtimeRes] = await Promise.all([
           fetch("https://cinema-booking-l32q.onrender.com/cinema"),
@@ -294,36 +293,54 @@ export default function SchedulePage() {
         />
 
         {/* Thêm class custom-scrollbar */}
-        <div className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
-          {filteredCinemas.length === 0 ? (
-            <div className="text-sm text-gray-500 text-center py-6">
-              Không tìm thấy rạp phù hợp.
+        {loading ? (
+          <div className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            <div className="flex flex-col items-center justify-center gap-4 py-60">
+              <div className="h-30 w-30 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+              <h3 className="text-lg font-medium text-gray-600">Đang tải...</h3>
             </div>
-          ) : (
-            filteredCinemas.map((cinema) => (
-              <button
-                type="button"
-                key={cinema.cinema_id}
-                onClick={() => {
-                  setSelectedCinemaId(cinema.cinema_id);
-                  setSelectedDate(0); // reset về hôm nay
-                }}
-                className={`w-full text-left p-3 rounded-lg border-l-4 transition-all ${
-                  selectedCinemaId === cinema.cinema_id
-                    ? "bg-pink-50 border-pink-500 font-semibold text-pink-700 shadow-sm"
-                    : "border-transparent hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex flex-col">
-                  <span>{cinema.name}</span>
-                  <span className="text-xs text-gray-500">
-                    {cinema.address}
-                  </span>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            {filteredCinemas.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-4 py-60">
+                <Image
+                  src={"/images/warning.png"}
+                  alt="image"
+                  width={150}
+                  height={150}
+                  className=" object-cover object-center"
+                />
+                <h3 className="text-lg font-medium text-gray-600">
+                  Lỗi không thể kết nối với được máy chủ!!!
+                </h3>
+              </div>
+            ) : (
+              filteredCinemas.map((cinema) => (
+                <button
+                  type="button"
+                  key={cinema.cinema_id}
+                  onClick={() => {
+                    setSelectedCinemaId(cinema.cinema_id);
+                    setSelectedDate(0);
+                  }}
+                  className={`w-full text-left p-3 rounded-lg border-l-4 transition-all cursor-pointer ${
+                    selectedCinemaId === cinema.cinema_id
+                      ? "bg-pink-50 border-pink-500 font-semibold text-pink-700 shadow-sm"
+                      : "border-transparent hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span>{cinema.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {cinema.address}
+                    </span>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Lịch chiếu */}
@@ -355,7 +372,11 @@ export default function SchedulePage() {
               key={d.id}
               onClick={() => setSelectedDate(d.id)}
               variant={selectedDate === d.id ? "default" : "outline"}
-              className={selectedDate === d.id ? "bg-pink-500 text-white" : ""}
+              className={
+                selectedDate === d.id
+                  ? "bg-pink-500 text-white cursor-pointer"
+                  : "cursor-pointer"
+              }
             >
               {d.label}
             </Button>
@@ -363,30 +384,9 @@ export default function SchedulePage() {
         </div>
 
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-10">
-            <svg
-              className="animate-spin h-16 w-16 text-pink-500 mb-4"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-              ></path>
-            </svg>
-            <div className="text-center text-gray-500 text-lg font-medium">
-              Đang tải lịch chiếu...
-            </div>
+          <div className="flex flex-col items-center justify-center gap-4 py-40">
+            <div className="h-30 w-30 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+            <h3 className="text-lg font-medium text-gray-600">Đang tải...</h3>
           </div>
         ) : (
           /* Thêm class custom-scrollbar */
@@ -433,8 +433,7 @@ export default function SchedulePage() {
                       alt={movie.title}
                       width={224}
                       height={288}
-                      className="w-full sm:w-56 h-72 object-cover rounded-2xl mb-3 sm:mb-0 sm:mr-6 shadow-md 
-               transition-transform duration-300 ease-in-out hover:scale-105 relative hover:z-10"
+                      className="w-full sm:w-56 h-72 object-cover rounded-2xl mb-3 sm:mb-0 sm:mr-6 shadow-md transition-transform duration-300 ease-in-out hover:scale-105 relative hover:z-10 cursor-pointer"
                       unoptimized={true}
                     />
                     <div className="flex-1 flex flex-col justify-between">

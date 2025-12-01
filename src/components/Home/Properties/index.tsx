@@ -18,6 +18,7 @@ interface Movie {
 const Properties: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
   const itemsPerView = 3;
 
   // Fetch API
@@ -31,6 +32,8 @@ const Properties: React.FC = () => {
         setMovies(data);
       } catch (error) {
         console.error("Error fetching movies:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchMovies();
@@ -84,38 +87,49 @@ const Properties: React.FC = () => {
         </div>
 
         {/* Carousel */}
-        <div className="relative w-full overflow-hidden">
-          <div
-            className="flex transition-transform duration-700 ease-in-out"
-            style={{
-              transform: `translateX(-${(currentIndex * 100) / itemsPerView}%)`,
-            }}
-          >
-            {movies.map((movie, index) => (
-              <div
-                key={index}
-                className="px-4"
-                style={{ flex: `0 0 ${100 / itemsPerView}%` }}
-              >
-                <MovieCard movie={movie} />
-              </div>
-            ))}
+        {loading ? (
+          <div className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            <div className="flex flex-col items-center justify-center gap-4 py-60">
+              <div className="h-30 w-30 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+              <h3 className="text-lg font-medium text-gray-600">Đang tải...</h3>
+            </div>
           </div>
+        ) : (
+          <div className="relative w-full overflow-hidden">
+            <div
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{
+                transform: `translateX(-${
+                  (currentIndex * 100) / itemsPerView
+                }%)`,
+              }}
+            >
+              {movies.map((movie, index) => (
+                <div
+                  key={index}
+                  className="px-4"
+                  style={{ flex: `0 0 ${100 / itemsPerView}%` }}
+                >
+                  <MovieCard movie={movie} />
+                </div>
+              ))}
+            </div>
 
-          {/* Nút điều hướng */}
-          <button
-            onClick={prevSlide}
-            className="absolute top-1/2 left-2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow"
-          >
-            ◀
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute top-1/2 right-2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow"
-          >
-            ▶
-          </button>
-        </div>
+            {/* Nút điều hướng */}
+            <button
+              onClick={prevSlide}
+              className="absolute top-1/2 left-2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow"
+            >
+              ◀
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute top-1/2 right-2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow"
+            >
+              ▶
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -20,6 +20,7 @@ const CinemaListing: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [searchTitle, setSearchTitle] = useState("");
+  const [loading, setLoading] = useState(true);
   const [searchGenre, setSearchGenre] = useState("");
 
   useEffect(() => {
@@ -33,6 +34,8 @@ const CinemaListing: React.FC = () => {
         setFilteredMovies(data);
       } catch (error) {
         console.error("Error fetching movies:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchMovies();
@@ -99,13 +102,22 @@ const CinemaListing: React.FC = () => {
         </div>
 
         {/* Grid layout */}
-        <div className="flex flex-wrap -mx-4">
-          {filteredMovies.map((movie, index) => (
-            <div key={index} className="w-full md:w-1/3 px-4 mb-8">
-              <MovieCard movie={movie} />
+        {loading ? (
+          <div className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            <div className="flex flex-col items-center justify-center gap-4 py-60">
+              <div className="h-30 w-30 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+              <h3 className="text-lg font-medium text-gray-600">Đang tải...</h3>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap -mx-4">
+            {filteredMovies.map((movie, index) => (
+              <div key={index} className="w-full md:w-1/3 px-4 mb-8">
+                <MovieCard movie={movie} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

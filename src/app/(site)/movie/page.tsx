@@ -616,8 +616,8 @@ export default function MovieDetail() {
       <HeroSub title={heroTitle} description={heroDescription} badge="Movies" />
       <div className="max-w-6xl mx-auto p-6 space-y-8">
         {loading && (
-          <div className="flex flex-col items-center justify-center gap-4 py-42">
-            <div className="h-20 w-20 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+          <div className="flex flex-col items-center justify-center gap-4 py-60">
+            <div className="h-30 w-30 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
             <h3 className="text-lg font-medium text-gray-600">Đang tải...</h3>
           </div>
         )}
@@ -629,12 +629,12 @@ export default function MovieDetail() {
         )}
 
         {!loading && error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl py-40 text-center flex flex-col items-center justify-center">
+          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl py-60 text-center flex flex-col items-center justify-center">
             <Image
               src={"/images/documentation/123.png"}
               alt="image"
-              width={90}
-              height={90}
+              width={150}
+              height={150}
               className=" object-cover object-center"
             />
             {error}
