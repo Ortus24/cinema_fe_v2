@@ -201,7 +201,7 @@ const Header: React.FC = () => {
                       href="/profile"
                       className="py-4 px-8 bg-transparent border border-primary text-base leading-4 block w-fit text-primary rounded-full font-semibold mt-3 hover:bg-primary hover:text-white duration-300"
                     >
-                      Profile
+                      Tài khoản
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -210,7 +210,7 @@ const Header: React.FC = () => {
                       font-semibold mt-3 hover:bg-transparent hover:text-primary
                       duration-300"
                     >
-                      Log out
+                      Đăng xuất
                     </button>
                   </li>
                 ) : (
@@ -224,7 +224,7 @@ const Header: React.FC = () => {
                         href="/signin"
                         className="py-4 px-8 bg-primary text-base leading-4 block w-fit text-white rounded-full border border-primary font-semibold mt-3 hover:bg-transparent hover:text-primary duration-300"
                       >
-                        Log In
+                        Đăng nhập
                       </Link>
                     </button>
 
@@ -237,7 +237,7 @@ const Header: React.FC = () => {
                         href="/signup"
                         className="py-4 px-8 bg-transparent border border-primary text-base leading-4 block w-fit text-primary rounded-full font-semibold mt-3 hover:bg-primary hover:text-white duration-300"
                       >
-                        Sign up
+                        Đăng ký
                       </Link>
                     </button>
                   </li>
