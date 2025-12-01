@@ -162,12 +162,15 @@ export default function MovieDetail() {
       setError(null);
       try {
         const fetchById = async () => {
-          const res = await fetch(`http://localhost:3001/movie/${numericId}`, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-            cache: "no-store",
-          });
+          const res = await fetch(
+            `https://cinema-minio.onrender.com//movie/${numericId}`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+              cache: "no-store",
+            }
+          );
           if (!res.ok) {
             throw new Error("Không tìm thấy thông tin phim");
           }
@@ -189,12 +192,15 @@ export default function MovieDetail() {
         setMovie(data as MovieDetail);
       } catch (err: unknown) {
         try {
-          const listRes = await fetch("http://localhost:3001/movie", {
-            headers: {
-              "Content-Type": "application/json",
-            },
-            cache: "no-store",
-          });
+          const listRes = await fetch(
+            "https://cinema-minio.onrender.com//movie",
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+              cache: "no-store",
+            }
+          );
           if (listRes.ok) {
             const listData: unknown = await listRes.json();
             const fromList = Array.isArray(listData)
@@ -257,7 +263,7 @@ export default function MovieDetail() {
   useEffect(() => {
     const fetchCinemas = async () => {
       try {
-        const res = await fetch("http://localhost:3001/cinema", {
+        const res = await fetch("https://cinema-minio.onrender.com//cinema", {
           cache: "force-cache",
         });
         if (!res.ok) return;
@@ -302,7 +308,7 @@ export default function MovieDetail() {
 
       try {
         const res = await fetch(
-          `http://localhost:3001/showtimes/movie?movie=${numericId}`,
+          `https://cinema-minio.onrender.com//showtimes/movie?movie=${numericId}`,
           {
             headers: {
               "Content-Type": "application/json",

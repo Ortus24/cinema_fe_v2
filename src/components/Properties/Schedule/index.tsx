@@ -132,8 +132,8 @@ export default function SchedulePage() {
       setLoading(true);
       try {
         const [cinemaRes, showtimeRes] = await Promise.all([
-          fetch("http://localhost:3001/cinema"),
-          fetch("http://localhost:3001/showtimes/current"),
+          fetch("https://cinema-minio.onrender.com//cinema"),
+          fetch("https://cinema-minio.onrender.com//showtimes/current"),
         ]);
 
         if (cinemaRes.ok) {

@@ -57,7 +57,9 @@ export default function SeatSelectionModal({
     if (!showtimeId) return;
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:3001/showtimes/${showtimeId}`);
+      const res = await fetch(
+        `https://cinema-minio.onrender.com//showtimes/${showtimeId}`
+      );
       const data = await res.json();
       setSeats(Array.isArray(data.seatInfo) ? data.seatInfo : []);
     } catch (err) {
@@ -93,7 +95,7 @@ export default function SeatSelectionModal({
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (bookingCode > 0) {
-        fetch("http://localhost:3001/booking/cancel-beacon", {
+        fetch("https://cinema-minio.onrender.com//booking/cancel-beacon", {
           method: "POST",
           body: JSON.stringify({
             orderCode: bookingCode,
@@ -160,19 +162,22 @@ export default function SeatSelectionModal({
             .padStart(3, "0")}`
         );
 
-        const booking = await fetch("http://localhost:3001/booking", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-          body: JSON.stringify({
-            ticket: selectedSeatIds.map((id) => ({
-              seat_id: id,
-              showtime_id: showtimeId,
-            })),
-          }),
-        });
+        const booking = await fetch(
+          "https://cinema-minio.onrender.com//booking",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `${token}`,
+            },
+            body: JSON.stringify({
+              ticket: selectedSeatIds.map((id) => ({
+                seat_id: id,
+                showtime_id: showtimeId,
+              })),
+            }),
+          }
+        );
 
         const data = await booking.json();
         // alert(JSON.stringify(data, null, 2));
@@ -190,7 +195,7 @@ export default function SeatSelectionModal({
           console.log(bookingId);
 
           const response = await fetch(
-            "http://localhost:3001/payos/create-payment",
+            "https://cinema-minio.onrender.com//payos/create-payment",
             {
               method: "POST",
               headers: {
@@ -210,7 +215,7 @@ export default function SeatSelectionModal({
             // alert(JSON.stringify(result, null, 2));
           } else {
             const response1 = await fetch(
-              `http://localhost:3001/booking/${bookingId}`,
+              `https://cinema-minio.onrender.com//booking/${bookingId}`,
               {
                 method: "DELETE",
                 headers: {
@@ -228,13 +233,16 @@ export default function SeatSelectionModal({
         console.error(err);
         // alert("Có lỗi xảy ra khi tạo thanh toán!");
         if (bookingOrder != -1) {
-          await fetch(`http://localhost:3001/booking/${bookingOrder}`, {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          });
+          await fetch(
+            `https://cinema-minio.onrender.com//booking/${bookingOrder}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `${token}`,
+              },
+            }
+          );
         }
         // alert("Tạo thanh toán thất bại!");
       } finally {
