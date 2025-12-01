@@ -39,5 +39,36 @@ const handler = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    async signIn({ account, profile }) {
+      // Chỉ thực hiện cuộc gọi API cho các nhà cung cấp OAuth
+      if (
+        account &&
+        (account.provider === "google" || account.provider === "github")
+      ) {
+        try {
+          // Logic gọi API cho social login vẫn giữ nguyên
+          const res = await fetch("http://localhost:3001/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken: account.id_token }),
+          });
+
+          if (res.ok) {
+            console.log("Đăng nhập thành công");
+            return true;
+          }
+          // Nếu API trả về lỗi, từ chối đăng nhập
+          return false;
+        } catch (error) {
+          console.error("Lỗi khi gọi API đăng nhập:", error);
+          // Xảy ra lỗi mạng hoặc lỗi khác, từ chối đăng nhập
+          return false;
+        }
+      }
+      // Cho phép đăng nhập với các nhà cung cấp khác (ví dụ: credentials)
+      return true;
+    },
+  },
 });
 export { handler as GET, handler as POST };

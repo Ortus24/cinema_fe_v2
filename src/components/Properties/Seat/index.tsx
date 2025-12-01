@@ -57,9 +57,7 @@ export default function SeatSelectionModal({
     if (!showtimeId) return;
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://cinema-booking-l32q.onrender.com/showtimes/${showtimeId}`
-      );
+      const res = await fetch(`http://localhost:3001/showtimes/${showtimeId}`);
       const data = await res.json();
       setSeats(Array.isArray(data.seatInfo) ? data.seatInfo : []);
     } catch (err) {
@@ -92,22 +90,26 @@ export default function SeatSelectionModal({
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  window.addEventListener("beforeunload", () => {
-    if (bookingCode > 0) {
-      fetch("https://cinema-booking-l32q.onrender.com/booking/cancel-beacon", {
-        method: "POST",
-        body: JSON.stringify({
-          orderCode: bookingCode,
-          reason: "tab closed",
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        keepalive: true, // 👈 Cho phép chạy khi tab unload
-      });
-    }
-  });
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (bookingCode > 0) {
+        fetch("http://localhost:3001/booking/cancel-beacon", {
+          method: "POST",
+          body: JSON.stringify({
+            orderCode: bookingCode,
+            reason: "tab closed",
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          keepalive: true, // 👈 Cho phép chạy khi tab unload
+        });
+      }
+    };
 
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [bookingCode]); // Phụ thuộc vào bookingCode để gửi đúng mã
   const router = useRouter();
 
   const handleSelectSeat = (seat: Seat) => {
@@ -158,26 +160,28 @@ export default function SeatSelectionModal({
             .padStart(3, "0")}`
         );
 
-        const booking = await fetch(
-          "https://cinema-booking-l32q.onrender.com/booking",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-            body: JSON.stringify({
-              ticket: selectedSeatIds.map((id) => ({
-                seat_id: id,
-                showtime_id: showtimeId,
-              })),
-            }),
-          }
-        );
+        const booking = await fetch("http://localhost:3001/booking", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `${token}`,
+          },
+          body: JSON.stringify({
+            ticket: selectedSeatIds.map((id) => ({
+              seat_id: id,
+              showtime_id: showtimeId,
+            })),
+          }),
+        });
 
         const data = await booking.json();
         // alert(JSON.stringify(data, null, 2));
         console.log(data);
+
+        if (data.statusCode && data.statusCode !== 200) {
+          router.push("/signin");
+          return;
+        }
 
         if (data.booking_id > 0) {
           const bookingId = Number(data.booking_id);
@@ -186,12 +190,12 @@ export default function SeatSelectionModal({
           console.log(bookingId);
 
           const response = await fetch(
-            "https://cinema-booking-l32q.onrender.com/payos/create-payment",
+            "http://localhost:3001/payos/create-payment",
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `${token}`,
+                // Authorization: `${token}`,
               },
               body: JSON.stringify({
                 booking_id: bookingId,
@@ -206,10 +210,13 @@ export default function SeatSelectionModal({
             // alert(JSON.stringify(result, null, 2));
           } else {
             const response1 = await fetch(
-              `https://cinema-booking-l32q.onrender.com/booking/${bookingId}`,
+              `http://localhost:3001/booking/${bookingId}`,
               {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `${token}`,
+                },
               }
             );
             // const data1 = await response1.json();
@@ -221,13 +228,13 @@ export default function SeatSelectionModal({
         console.error(err);
         // alert("Có lỗi xảy ra khi tạo thanh toán!");
         if (bookingOrder != -1) {
-          await fetch(
-            `https://cinema-booking-l32q.onrender.com/booking/${bookingOrder}`,
-            {
-              method: "DELETE",
-              headers: { "Content-Type": "application/json" },
-            }
-          );
+          await fetch(`http://localhost:3001/booking/${bookingOrder}`, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `${token}`,
+            },
+          });
         }
         // alert("Tạo thanh toán thất bại!");
       } finally {

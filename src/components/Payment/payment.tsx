@@ -22,7 +22,7 @@ export default function InfoPage() {
       const postCancel = async () => {
         try {
           const a = await fetch(
-            `https://cinema-booking-l32q.onrender.com/booking/${orderCode}`,
+            `http://localhost:3001/booking/${orderCode}`,
             {
               method: "DELETE",
               headers: {

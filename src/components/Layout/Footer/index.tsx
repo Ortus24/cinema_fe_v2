@@ -10,7 +10,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-10 border-b border-gray-700">
           {/* Cột 1 - Giới thiệu */}
           <div>
-            <h3 className="text-2xl font-bold text-white mb-4">CineBooking</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">
+              Cinema Booking
+            </h3>
             <p className="text-sm text-gray-400 leading-relaxed">
               Nền tảng đặt vé xem phim nhanh chóng, tiện lợi và bảo mật. Trải
               nghiệm điện ảnh đỉnh cao cùng chúng tôi 🎬
@@ -20,10 +22,10 @@ const Footer = () => {
           {/* Cột 2 - Liên kết nhanh */}
           <div>
             <h4 className="text-lg font-semibold text-white mb-4">
-              Liên kết nhanh
+              Tài nguyên
             </h4>
             <ul className="space-y-2">
-              {FooterLinks.slice(0, 4).map((item, index) => (
+              {/* {FooterLinks.slice(0, 4).map((item, index) => (
                 <li key={index}>
                   <Link
                     href={item.href}
@@ -32,15 +34,22 @@ const Footer = () => {
                     {item.label}
                   </Link>
                 </li>
-              ))}
+              ))} */}
+
+              <Link
+                href={"documentation"}
+                className="hover:text-primary transition-colors"
+              >
+                Tài liệu phát triển
+              </Link>
             </ul>
           </div>
 
           {/* Cột 3 - Hỗ trợ khách hàng */}
           <div>
-            <h4 className="text-lg font-semibold text-white mb-4">
+            {/* <h4 className="text-lg font-semibold text-white mb-4">
               Hỗ trợ khách hàng
-            </h4>
+            </h4> */}
             <ul className="space-y-2">
               {FooterLinks.slice(4, 8).map((item, index) => (
                 <li key={index}>
@@ -73,7 +82,11 @@ const Footer = () => {
             </p>
 
             <div className="flex gap-4 mt-4">
-              <Link href="#">
+              <Link
+                href="https://www.facebook.com/share/17STh3GC17/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Icon
                   icon="ph:facebook-logo-fill"
                   width={24}
@@ -81,7 +94,7 @@ const Footer = () => {
                   className="hover:text-primary transition-colors"
                 />
               </Link>
-              <Link href="#">
+              {/* <Link href="#">
                 <Icon
                   icon="ph:instagram-logo-fill"
                   width={24}
@@ -92,6 +105,18 @@ const Footer = () => {
               <Link href="#">
                 <Icon
                   icon="ph:x-logo-bold"
+                  width={24}
+                  height={24}
+                  className="hover:text-primary transition-colors"
+                />
+              </Link> */}
+              <Link
+                href="https://github.com/Ortus24/cinema_fe_v2"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon
+                  icon="mdi:github"
                   width={24}
                   height={24}
                   className="hover:text-primary transition-colors"

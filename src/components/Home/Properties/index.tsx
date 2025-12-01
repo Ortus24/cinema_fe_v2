@@ -24,9 +24,7 @@ const Properties: React.FC = () => {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch(
-          "https://cinema-booking-l32q.onrender.com/movie"
-        );
+        const res = await fetch("http://localhost:3001/movie");
         const data = await res.json();
         setMovies(data);
       } catch (error) {

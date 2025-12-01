@@ -132,8 +132,8 @@ export default function SchedulePage() {
       setLoading(true);
       try {
         const [cinemaRes, showtimeRes] = await Promise.all([
-          fetch("https://cinema-booking-l32q.onrender.com/cinema"),
-          fetch("https://cinema-booking-l32q.onrender.com/showtimes/current"),
+          fetch("http://localhost:3001/cinema"),
+          fetch("http://localhost:3001/showtimes/current"),
         ]);
 
         if (cinemaRes.ok) {
@@ -394,7 +394,7 @@ export default function SchedulePage() {
             {moviesByTitle.length === 0 ? (
               <div className="flex flex-col items-center justify-center mt-10 text-center animate-fadeIn">
                 <Image
-                  src="https://cinema-minio.onrender.com/cinema-bucket/image/5e2aedef-0d08-4d45-bbbd-27f542a1f516-4076549.png"
+                  src="https://cinema-booking-l32q.onrender.com/downloads/frontend/a2da2e00-05f7-4d67-9d2c-b7fe31e247f2-no-results.png"
                   alt="No movies"
                   width={160}
                   height={160}
