@@ -163,7 +163,7 @@ export default function MovieDetail() {
       try {
         const fetchById = async () => {
           const res = await fetch(
-            `https://cinema-minio.onrender.com//movie/${numericId}`,
+            `https://cinema-minio.onrender.com/movie/${numericId}`,
             {
               headers: {
                 "Content-Type": "application/json",
@@ -193,7 +193,7 @@ export default function MovieDetail() {
       } catch (err: unknown) {
         try {
           const listRes = await fetch(
-            "https://cinema-minio.onrender.com//movie",
+            "https://cinema-minio.onrender.com/movie",
             {
               headers: {
                 "Content-Type": "application/json",
@@ -263,7 +263,7 @@ export default function MovieDetail() {
   useEffect(() => {
     const fetchCinemas = async () => {
       try {
-        const res = await fetch("https://cinema-minio.onrender.com//cinema", {
+        const res = await fetch("https://cinema-minio.onrender.com/cinema", {
           cache: "force-cache",
         });
         if (!res.ok) return;
@@ -308,7 +308,7 @@ export default function MovieDetail() {
 
       try {
         const res = await fetch(
-          `https://cinema-minio.onrender.com//showtimes/movie?movie=${numericId}`,
+          `https://cinema-minio.onrender.com/showtimes/movie?movie=${numericId}`,
           {
             headers: {
               "Content-Type": "application/json",
