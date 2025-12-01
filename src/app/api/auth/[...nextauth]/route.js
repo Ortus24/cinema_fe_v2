@@ -48,11 +48,14 @@ const handler = NextAuth({
       ) {
         try {
           // Logic gọi API cho social login vẫn giữ nguyên
-          const res = await fetch("https://cinema-minio.onrender.com/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken: account.id_token }),
-          });
+          const res = await fetch(
+            "https://cinema-booking-l32q.onrender.com/login",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idToken: account.id_token }),
+            }
+          );
 
           if (res.ok) {
             console.log("Đăng nhập thành công");

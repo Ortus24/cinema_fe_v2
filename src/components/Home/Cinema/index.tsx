@@ -25,7 +25,9 @@ const CinemaListing: React.FC = () => {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch("https://cinema-minio.onrender.com/movie");
+        const res = await fetch(
+          "https://cinema-booking-l32q.onrender.com/movie"
+        );
         const data = await res.json();
         setMovies(data);
         setFilteredMovies(data);

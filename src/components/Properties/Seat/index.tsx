@@ -58,7 +58,7 @@ export default function SeatSelectionModal({
     setLoading(true);
     try {
       const res = await fetch(
-        `https://cinema-minio.onrender.com/showtimes/${showtimeId}`
+        `https://cinema-booking-l32q.onrender.com/showtimes/${showtimeId}`
       );
       const data = await res.json();
       setSeats(Array.isArray(data.seatInfo) ? data.seatInfo : []);
@@ -95,17 +95,20 @@ export default function SeatSelectionModal({
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (bookingCode > 0) {
-        fetch("https://cinema-minio.onrender.com/booking/cancel-beacon", {
-          method: "POST",
-          body: JSON.stringify({
-            orderCode: bookingCode,
-            reason: "tab closed",
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-          keepalive: true, // 👈 Cho phép chạy khi tab unload
-        });
+        fetch(
+          "https://cinema-booking-l32q.onrender.com/booking/cancel-beacon",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              orderCode: bookingCode,
+              reason: "tab closed",
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+            keepalive: true, // 👈 Cho phép chạy khi tab unload
+          }
+        );
       }
     };
 
@@ -163,7 +166,7 @@ export default function SeatSelectionModal({
         );
 
         const booking = await fetch(
-          "https://cinema-minio.onrender.com/booking",
+          "https://cinema-booking-l32q.onrender.com/booking",
           {
             method: "POST",
             headers: {
@@ -195,7 +198,7 @@ export default function SeatSelectionModal({
           console.log(bookingId);
 
           const response = await fetch(
-            "https://cinema-minio.onrender.com/payos/create-payment",
+            "https://cinema-booking-l32q.onrender.com/payos/create-payment",
             {
               method: "POST",
               headers: {
@@ -215,7 +218,7 @@ export default function SeatSelectionModal({
             // alert(JSON.stringify(result, null, 2));
           } else {
             const response1 = await fetch(
-              `https://cinema-minio.onrender.com/booking/${bookingId}`,
+              `https://cinema-booking-l32q.onrender.com/booking/${bookingId}`,
               {
                 method: "DELETE",
                 headers: {
@@ -234,7 +237,7 @@ export default function SeatSelectionModal({
         // alert("Có lỗi xảy ra khi tạo thanh toán!");
         if (bookingOrder != -1) {
           await fetch(
-            `https://cinema-minio.onrender.com/booking/${bookingOrder}`,
+            `https://cinema-booking-l32q.onrender.com/booking/${bookingOrder}`,
             {
               method: "DELETE",
               headers: {

@@ -163,7 +163,7 @@ export default function MovieDetail() {
       try {
         const fetchById = async () => {
           const res = await fetch(
-            `https://cinema-minio.onrender.com/movie/${numericId}`,
+            `https://cinema-booking-l32q.onrender.com/movie/${numericId}`,
             {
               headers: {
                 "Content-Type": "application/json",
@@ -193,7 +193,7 @@ export default function MovieDetail() {
       } catch (err: unknown) {
         try {
           const listRes = await fetch(
-            "https://cinema-minio.onrender.com/movie",
+            "https://cinema-booking-l32q.onrender.com/movie",
             {
               headers: {
                 "Content-Type": "application/json",
@@ -263,9 +263,12 @@ export default function MovieDetail() {
   useEffect(() => {
     const fetchCinemas = async () => {
       try {
-        const res = await fetch("https://cinema-minio.onrender.com/cinema", {
-          cache: "force-cache",
-        });
+        const res = await fetch(
+          "https://cinema-booking-l32q.onrender.com/cinema",
+          {
+            cache: "force-cache",
+          }
+        );
         if (!res.ok) return;
         const data: Cinema[] = await res.json();
 
@@ -308,7 +311,7 @@ export default function MovieDetail() {
 
       try {
         const res = await fetch(
-          `https://cinema-minio.onrender.com/showtimes/movie?movie=${numericId}`,
+          `https://cinema-booking-l32q.onrender.com/showtimes/movie?movie=${numericId}`,
           {
             headers: {
               "Content-Type": "application/json",
