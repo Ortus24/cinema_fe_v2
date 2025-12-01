@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import SeatSelectionModal from "@/components/Properties/Seat";
 import { useEffect, useMemo, useState } from "react";
 
@@ -110,7 +110,7 @@ const HeroSub = ({
 );
 
 export default function MovieDetail() {
-  const [movieId, setMovieId] = useState<string | null>(null);
+  const [movieId, setMovieId] = useState<string | null>("entity");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -119,7 +119,7 @@ export default function MovieDetail() {
   }, []);
 
   const [movie, setMovie] = useState<MovieDetail | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showtimes, setShowtimes] = useState<Showtime[]>([]);
   const [showtimesLoading, setShowtimesLoading] = useState(false);
@@ -242,8 +242,8 @@ export default function MovieDetail() {
   }, [loading, error, movie]);
 
   const heroDescription = useMemo(() => {
-    if (loading)
-      return "Vui lòng chờ trong giây lát, chúng tôi đang tải dữ liệu phim.";
+    // if (loading)
+    //   return "Vui lòng chờ trong giây lát, chúng tôi đang tải dữ liệu phim.";
     if (error) return error;
     return movie
       ? `${movie.genre} • ${movie.duration} phút • ${movie.language}`
@@ -615,6 +615,13 @@ export default function MovieDetail() {
     <>
       <HeroSub title={heroTitle} description={heroDescription} badge="Movies" />
       <div className="max-w-6xl mx-auto p-6 space-y-8">
+        {loading && (
+          <div className="flex flex-col items-center justify-center gap-4 py-42">
+            <div className="h-20 w-20 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+            <h3 className="text-lg font-medium text-gray-600">Đang tải...</h3>
+          </div>
+        )}
+
         {!movieId && (
           <div className="bg-white rounded-xl shadow p-6 text-center text-gray-600">
             Vui lòng chọn một phim từ trang danh sách để xem chi tiết.
@@ -622,14 +629,15 @@ export default function MovieDetail() {
         )}
 
         {!loading && error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-6 text-center">
+          <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl py-40 text-center flex flex-col items-center justify-center">
+            <Image
+              src={"/images/documentation/123.png"}
+              alt="image"
+              width={90}
+              height={90}
+              className=" object-cover object-center"
+            />
             {error}
-          </div>
-        )}
-
-        {loading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="h-12 w-12 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
           </div>
         )}
 

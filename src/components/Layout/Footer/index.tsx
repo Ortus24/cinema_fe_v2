@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { FooterLinks } from "@/app/api/footerlinks";
 
@@ -25,7 +26,7 @@ const Footer = () => {
               Tài nguyên
             </h4>
             <ul className="space-y-2">
-              {/* {FooterLinks.slice(0, 4).map((item, index) => (
+              {FooterLinks.slice(0, 1).map((item, index) => (
                 <li key={index}>
                   <Link
                     href={item.href}
@@ -34,22 +35,15 @@ const Footer = () => {
                     {item.label}
                   </Link>
                 </li>
-              ))} */}
-
-              <Link
-                href={"documentation"}
-                className="hover:text-primary transition-colors"
-              >
-                Tài liệu phát triển
-              </Link>
+              ))}
             </ul>
           </div>
 
           {/* Cột 3 - Hỗ trợ khách hàng */}
           <div>
-            {/* <h4 className="text-lg font-semibold text-white mb-4">
-              Hỗ trợ khách hàng
-            </h4> */}
+            <h4 className="text-lg font-semibold text-white mb-4">
+              Truy cập nhanh
+            </h4>
             <ul className="space-y-2">
               {FooterLinks.slice(4, 8).map((item, index) => (
                 <li key={index}>
@@ -87,26 +81,27 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Icon
-                  icon="ph:facebook-logo-fill"
-                  width={24}
-                  height={24}
+                <Image
+                  src={"/images/header/facebook.png"}
+                  alt="image"
+                  width={22}
+                  height={22}
                   className="hover:text-primary transition-colors"
                 />
               </Link>
               {/* <Link href="#">
                 <Icon
                   icon="ph:instagram-logo-fill"
-                  width={24}
-                  height={24}
+                  width={22}
+                  height={22}
                   className="hover:text-primary transition-colors"
                 />
               </Link>
               <Link href="#">
                 <Icon
                   icon="ph:x-logo-bold"
-                  width={24}
-                  height={24}
+                  width={22}
+                  height={22}
                   className="hover:text-primary transition-colors"
                 />
               </Link> */}
@@ -115,10 +110,11 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Icon
-                  icon="mdi:github"
-                  width={24}
-                  height={24}
+                <Image
+                  src={"/images/header/github.png"}
+                  alt="image"
+                  width={22}
+                  height={22}
                   className="hover:text-primary transition-colors"
                 />
               </Link>
@@ -146,7 +142,8 @@ const Footer = () => {
         {/* ==== Phần cuối: Bản quyền ==== */}
         <div className="flex flex-col md:flex-row justify-between items-center py-6 text-gray-500 text-sm">
           <p>
-            © {new Date().getFullYear()} CineBooking — Thiết kế & phát triển bởi{" "}
+            © {new Date().getFullYear()} Cinema Booking — Thiết kế & phát triển
+            bởi{" "}
             <span className="text-white font-semibold">Nguyễn Long Nhật</span>
           </p>
           <div className="flex gap-6 mt-2 md:mt-0">

@@ -394,7 +394,7 @@ export default function SchedulePage() {
             {moviesByTitle.length === 0 ? (
               <div className="flex flex-col items-center justify-center mt-10 text-center animate-fadeIn">
                 <Image
-                  src="https://cinema-booking-l32q.onrender.com/downloads/frontend/a2da2e00-05f7-4d67-9d2c-b7fe31e247f2-no-results.png"
+                  src="images\properties\no-results.png"
                   alt="No movies"
                   width={160}
                   height={160}
