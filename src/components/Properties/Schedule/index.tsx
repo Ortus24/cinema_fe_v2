@@ -322,7 +322,7 @@ export default function SchedulePage() {
                   key={cinema.cinema_id}
                   onClick={() => {
                     setSelectedCinemaId(cinema.cinema_id);
-                    setSelectedDate(0);
+                    // setSelectedDate(0);
                   }}
                   className={`w-full text-left p-3 rounded-lg border-l-4 transition-all cursor-pointer ${
                     selectedCinemaId === cinema.cinema_id
