@@ -2,7 +2,7 @@
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import SocialSignIn from "../SocialSignIn";
 import toast, { Toaster } from "react-hot-toast";
 import AuthDialogContext from "@/app/context/AuthDialogContext";
@@ -15,6 +15,17 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
   const authDialog = useContext(AuthDialogContext);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      console.log("SignIn component mounted");
+      if (event.data?.type === "LOGIN_SUCCESS") {
+        router.push("/");
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,14 +47,13 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
       if (token) {
         // console.log("Token:", token);
         localStorage.setItem("token", token);
-        // toast.loading(token);
-        toast.success("Đăng nhập thành công");
-
-        router.push("/");
-        setTimeout(() => {
-          window.location.reload();
-          // router.push("/");
-        }, 500);
+        // Dispatch một sự kiện storage để các component khác (như Header) có thể lắng nghe
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "token",
+            newValue: token,
+          })
+        );
       } else {
         toast.error(data.message || "Đăng nhập thất bại");
       }
@@ -75,7 +85,7 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
         <div className="mb-[22px]">
           <input
             type="text"
-            placeholder="Username"
+            placeholder="Email"
             required
             value={username}
             onChange={(e) => setUsername(e.target.value)}

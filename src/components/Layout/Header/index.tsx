@@ -32,7 +32,6 @@ const Header: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setToken(null);
-    window.location.href = "/";
   };
 
   const handleScroll = useCallback(() => {
@@ -40,19 +39,34 @@ const Header: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
+    // Handler for the storage event (i.e., successful login)
+    const handleLoginSuccess = (event: StorageEvent) => {
+      // We only care about the 'token' key being set.
+      if (event.key === "token" && event.newValue) {
+        setToken(event.newValue);
+        toast.success("Đăng nhập thành công");
+        router.push("/");
+      }
+    };
 
-    console.log(token);
+    // Set the initial token state on component mount
+    const initialToken = localStorage.getItem("token");
+    if (initialToken) {
+      setToken(initialToken);
+    }
 
+    // Add other event listeners
+    window.addEventListener("storage", handleLoginSuccess);
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mousedown", handleClickOutside);
 
+    // Cleanup function
     return () => {
+      window.removeEventListener("storage", handleLoginSuccess);
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [handleScroll]);
+  }, [handleScroll, router]); // Dependency array includes router and handleScroll
 
   //===================================================================
   //Kiểm tra xem đã đăng nhập chưa
