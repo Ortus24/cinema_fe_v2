@@ -19,7 +19,7 @@ const SignUpVerify = () => {
   const userData = async (token: string) => {
     try {
       const userToken = await fetch(
-        `https://cinema-booking-l32q.onrender.com/signup-verify/${token}`,
+        process.env.BACKEND_URL + `/signup-verify/${token}`,
         {
           method: "GET",
           headers: {

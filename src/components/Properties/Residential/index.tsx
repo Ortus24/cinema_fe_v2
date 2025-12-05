@@ -57,7 +57,10 @@ const ResidentialList: React.FC = () => {
       <div className="relative w-full h-[500px] rounded-xl overflow-hidden shadow-md">
         <video
           className="absolute inset-0 w-full h-full object-cover z-0"
-          src="https://cinema-booking-l32q.onrender.comcinema-bucket/movie/conan/541eae8d-85db-4a10-8656-9625f5f53cb8-conantrailer.mp4"
+          src={
+            process.env.BACKEND_URL +
+            "cinema-bucket/movie/conan/541eae8d-85db-4a10-8656-9625f5f53cb8-conantrailer.mp4"
+          }
           title="Trailer phim"
           autoPlay
           muted

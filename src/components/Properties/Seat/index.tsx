@@ -94,10 +94,10 @@ export default function SeatSelectionModal({
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (bookingCode > 0) {
-        fetch(
-          "https://cinema-booking-l32q.onrender.com/booking/cancel-beacon",
-          {
+      if (bookingCode > 0 && navigator.sendBeacon) {
+        navigator.sendBeacon(
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/booking/cancel-beacon",
+          JSON.stringify({
             method: "POST",
             body: JSON.stringify({
               orderCode: bookingCode,
@@ -106,8 +106,7 @@ export default function SeatSelectionModal({
             headers: {
               "Content-Type": "application/json",
             },
-            keepalive: true, // 👈 Cho phép chạy khi tab unload
-          }
+          })
         );
       }
     };
@@ -166,7 +165,7 @@ export default function SeatSelectionModal({
         );
 
         const booking = await fetch(
-          "https://cinema-booking-l32q.onrender.com/booking",
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/booking",
           {
             method: "POST",
             headers: {
@@ -198,7 +197,7 @@ export default function SeatSelectionModal({
           console.log(bookingId);
 
           const response = await fetch(
-            "https://cinema-booking-l32q.onrender.com/payos/create-payment",
+            process.env.NEXT_PUBLIC_BACKEND_URL + "/payos/create-payment",
             {
               method: "POST",
               headers: {

@@ -9,13 +9,13 @@ const SocialSignUp = () => {
     const top = window.screen.height / 2 - height / 2;
 
     const popup = window.open(
-      "https://cinema-booking-l32q.onrender.com/auth/google",
+      process.env.NEXT_PUBLIC_BACKEND_URL + "/auth/google",
       "Google Login",
       `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
     );
 
     window.addEventListener("message", (event) => {
-      if (event.origin !== "https://cinema-booking-l32q.onrender.com") return;
+      if (event.origin !== process.env.NEXT_PUBLIC_BACKEND_URL) return;
 
       const { token } = event.data;
       if (token) {

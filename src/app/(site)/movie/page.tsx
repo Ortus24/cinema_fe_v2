@@ -163,7 +163,7 @@ export default function MovieDetail() {
       try {
         const fetchById = async () => {
           const res = await fetch(
-            `https://cinema-booking-l32q.onrender.com/movie/${numericId}`,
+            process.env.NEXT_PUBLIC_BACKEND_URL + `/movie/${numericId}`,
             {
               headers: {
                 "Content-Type": "application/json",
@@ -192,8 +192,9 @@ export default function MovieDetail() {
         setMovie(data as MovieDetail);
       } catch (err: unknown) {
         try {
+          // Fallback logic
           const listRes = await fetch(
-            "https://cinema-booking-l32q.onrender.com/movie",
+            process.env.NEXT_PUBLIC_BACKEND_URL + "/movie",
             {
               headers: {
                 "Content-Type": "application/json",
@@ -264,7 +265,7 @@ export default function MovieDetail() {
     const fetchCinemas = async () => {
       try {
         const res = await fetch(
-          "https://cinema-booking-l32q.onrender.com/cinema",
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/cinema",
           {
             cache: "force-cache",
           }
@@ -311,7 +312,8 @@ export default function MovieDetail() {
 
       try {
         const res = await fetch(
-          `https://cinema-booking-l32q.onrender.com/showtimes/movie?movie=${numericId}`,
+          process.env.NEXT_PUBLIC_BACKEND_URL +
+            `/showtimes/movie?movie=${numericId}`,
           {
             headers: {
               "Content-Type": "application/json",
