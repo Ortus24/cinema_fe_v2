@@ -26,7 +26,7 @@ const CinemaListing: React.FC = () => {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch(process.env.BACKEND_URL + "/movie");
+        const res = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/movie");
         const data = await res.json();
         setMovies(data);
         setFilteredMovies(data);
