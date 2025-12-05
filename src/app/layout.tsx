@@ -6,6 +6,7 @@ import Footer from "@/components/Layout/Footer";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 import SessionProviderComp from "@/components/nextauth/SessionProvider";
+import { Toaster, ToastIcon } from "react-hot-toast";
 
 const font = Bricolage_Grotesque({ subsets: ["latin"] });
 
@@ -33,6 +34,7 @@ export default function RootLayout({
           >
             {/* <Header /> */}
             {children}
+            <Toaster position="top-center" reverseOrder={false} />
             {/* <Footer /> */}
           </ThemeProvider>
         </SessionProviderComp>

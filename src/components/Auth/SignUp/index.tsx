@@ -1,49 +1,48 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import SocialSignUp from "../SocialSignUp";
 import Logo from "@/components/Layout/Header/BrandLogo/Logo";
-import { useContext, useState } from "react";
-import AuthDialogContext from "@/app/context/AuthDialogContext";
-const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
-  const router = useRouter();
+import { useState } from "react";
+const SignUp = () => {
   const [loading, setLoading] = useState(false);
-  const authDialog = useContext(AuthDialogContext);
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
 
     setLoading(true);
-    const data = new FormData(e.currentTarget);
-    const value = Object.fromEntries(data.entries());
-    const finalData = { ...value };
 
-    fetch("/api/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(finalData),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        toast.success("Successfully registered");
-        setLoading(false);
-        router.push("/");
-      })
-      .catch((err) => {
-        toast.error(err.message);
-        setLoading(false);
-      });
-    setTimeout(() => {
-      signUpOpen(false);
-    }, 1200);
-    authDialog?.setIsUserRegistered(true);
-
-    setTimeout(() => {
-      authDialog?.setIsUserRegistered(false);
-    }, 1100);
+    try {
+      const data = new FormData(form);
+      const res = await fetch(
+        "https://cinema-booking-l32q.onrender.com/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(Object.fromEntries(data.entries())),
+        }
+      );
+      const result = await res.json();
+      if (!result.error) {
+        toast.success(
+          "Đăng ký thành công! Vui lòng kiểm tra tài khoản để kích hoạt tài khoản.",
+          {
+            duration: 7000,
+          }
+        );
+        form.reset();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Lỗi kết nối đến server");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -101,9 +100,10 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
         <div className="mb-9">
           <button
             type="submit"
-            className="flex w-full cursor-pointer items-center justify-center rounded-md bg-primary px-5 py-3 text-base text-white transition duration-300 ease-in-out hover:!bg-darkprimary dark:hover:!bg-darkprimary"
+            disabled={loading}
+            className="flex w-full cursor-pointer items-center justify-center rounded-md bg-primary px-5 py-3 text-base text-white transition duration-300 ease-in-out hover:!bg-darkprimary disabled:cursor-not-allowed disabled:opacity-60 dark:hover:!bg-darkprimary"
           >
-            Sign Up
+            {loading ? "Signing Up..." : "Sign Up"}
           </button>
         </div>
       </form>

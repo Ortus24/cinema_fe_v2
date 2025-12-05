@@ -33,7 +33,7 @@ const ErrorPage = () => {
           </p>
         </div>
         <h2 className="text-dark text-52 relative font-bold dark:text-white ">
-          Lost? Let’s Help You Find Home.
+          Lost? Let’s Help You Find Movie.
         </h2>
         <p className="text-lg text-dark/50 dark:text-white/50 font-normal w-full mx-auto">
           Looks like you’ve hit a dead end — but don’t worry, we’ll help you get
