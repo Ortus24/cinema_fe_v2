@@ -265,7 +265,10 @@ export default function SchedulePage() {
    🎨 UI
   ======================= */
   return (
-    <div className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 h-screen overflow-hidden">
+    <div
+      className="flex flex-col md:flex-row justify-center gap-6 p-6 bg-gray-50 h-screen overflow-hidden"
+      id="schedule-section"
+    >
       {/* Thêm CSS cho thanh cuộn */}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
