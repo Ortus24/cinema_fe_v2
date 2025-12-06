@@ -19,7 +19,7 @@ const SignUpVerify = () => {
   const userData = async (token: string) => {
     try {
       const userToken = await fetch(
-        process.env.BACKEND_URL + `/signup-verify/${token}`,
+        process.env.NEXT_PUBLIC_BACKEND_URL + `/signup-verify/${token}`,
         {
           method: "GET",
           headers: {
